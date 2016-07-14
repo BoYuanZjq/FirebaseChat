@@ -1,0 +1,17 @@
+platform :ios, '8.4'
+
+target 'app' do
+	pod 'FBSDKCoreKit'
+	pod 'FBSDKLoginKit'
+	pod 'Firebase/Core'
+	pod 'Firebase/Auth'
+	pod 'Firebase/Database'
+	pod 'Firebase/Storage'
+
+	pod 'IQAudioRecorderController'
+	pod 'JSQMessagesViewController'
+	pod 'MBProgressHUD'
+	pod 'ProgressHUD'
+	pod 'Reachability'
+	pod 'RNGridMenu'
+end

@@ -1,0 +1,6 @@
+framework module RelatedSDK {
+  umbrella header "RelatedSDK.h"
+
+  export *
+  module * { export * }
+}
