@@ -28,7 +28,7 @@
 {
 	NSString *groupId;
 
-	int typingCounter;
+	NSInteger typingCounter;
 
 	FIRDatabaseReference *firebase1;
 	FIRDatabaseReference *firebase2;

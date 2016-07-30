@@ -34,7 +34,13 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	labelDescription.text = recent[FRECENT_DESCRIPTION];
-	labelLastMessage.text = [RELCryptor decryptText:recent[FRECENT_LASTMESSAGE] groupId:recent[FRECENT_GROUPID]];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	dispatch_async(dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL), ^{
+		NSString *lastMessage = [RELCryptor decryptText:recent[FRECENT_LASTMESSAGE] groupId:recent[FRECENT_GROUPID]];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			labelLastMessage.text = lastMessage;
+		});
+	});
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	NSDate *date = Number2Date(recent[FRECENT_UPDATEDAT]);
 	NSTimeInterval seconds = [[NSDate date] timeIntervalSinceDate:date];

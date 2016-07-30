@@ -56,7 +56,7 @@
 	name = message[FMESSAGE_USER_NAME];
 	date = Number2Date(message[FMESSAGE_CREATEDAT]);
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	maskOutgoing = [[FUser currentId] isEqualToString:message[FMESSAGE_USERID]];
+	maskOutgoing = [userId isEqualToString:[FUser currentId]];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if ([message[FMESSAGE_TYPE] isEqualToString:MESSAGE_TEXT])		return [self createTextMessage];
 	if ([message[FMESSAGE_TYPE] isEqualToString:MESSAGE_EMOJI])		return [self createEmojiMessage];
