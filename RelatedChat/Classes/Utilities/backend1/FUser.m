@@ -49,8 +49,7 @@
 #pragma mark - Email methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-+ (void)signInWithEmail:(NSString *)email password:(NSString *)password
-			 completion:(void (^)(FUser *user, NSError *error))completion
++ (void)signInWithEmail:(NSString *)email password:(NSString *)password completion:(void (^)(FUser *user, NSError *error))completion
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[[FIRAuth auth] signInWithEmail:email password:password completion:^(FIRUser *firuser, NSError *error)
@@ -75,15 +74,14 @@
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-+ (void)createUserWithEmail:(NSString *)email password:(NSString *)password name:(NSString *)name
-				 completion:(void (^)(FUser *user, NSError *error))completion
++ (void)createUserWithEmail:(NSString *)email password:(NSString *)password completion:(void (^)(FUser *user, NSError *error))completion
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[[FIRAuth auth] createUserWithEmail:email password:password completion:^(FIRUser *firuser, NSError *error)
 	{
 		if (error == nil)
 		{
-			[FUser create:firuser.uid email:email name:name picture:nil completion:^(FUser *user, NSError *error)
+			[FUser create:firuser.uid email:email completion:^(FUser *user, NSError *error)
 			{
 				if (error == nil)
 				{
@@ -106,8 +104,7 @@
 #pragma mark - Facebook methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-+ (void)signInWithFacebook:(UIViewController *)viewController
-				completion:(void (^)(FUser *user, NSError *error))completion
++ (void)signInWithFacebook:(UIViewController *)viewController completion:(void (^)(FUser *user, NSError *error))completion
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 #ifdef FACEBOOK_LOGIN_ENABLED
@@ -135,8 +132,7 @@
 #pragma mark - Credential methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-+ (void)signInWithCredential:(FIRAuthCredential *)credential
-				  completion:(void (^)(FUser *user, NSError *error))completion
++ (void)signInWithCredential:(FIRAuthCredential *)credential completion:(void (^)(FUser *user, NSError *error))completion
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[[FIRAuth auth] signInWithCredential:credential completion:^(FIRUser *firuser, NSError *error)
@@ -190,22 +186,19 @@
 	{
 		if (error != nil)
 		{
-			[self create:firuser.uid email:firuser.email name:firuser.displayName picture:firuser.photoURL.absoluteString completion:completion];
+			[self create:firuser.uid email:firuser.email completion:completion];
 		}
 		else if (completion != nil) completion(user, nil);
 	}];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-+ (void)create:(NSString *)uid email:(NSString *)email name:(NSString *)name picture:(NSString *)picture
-	completion:(void (^)(FUser *user, NSError *error))completion
++ (void)create:(NSString *)uid email:(NSString *)email completion:(void (^)(FUser *user, NSError *error))completion
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	FUser *user = [FUser userWithId:uid];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if (email != nil)	user[@"email"] = email;
-	if (name != nil)	user[@"name"] = name;
-	if (picture != nil)	user[@"picture"] = picture;
+	if (email != nil) user[@"email"] = email;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[user saveInBackground:^(NSError *error)
 	{

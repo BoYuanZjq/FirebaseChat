@@ -14,7 +14,7 @@
 #pragma mark - Private Chat methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-NSString* StartPrivateChat(FUser *user2)
+NSDictionary* StartPrivateChat(FUser *user2)
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	FUser *user1 = [FUser currentUser];
@@ -27,16 +27,21 @@ NSString* StartPrivateChat(FUser *user2)
 	NSArray *sorted = [members sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
 	NSString *groupId = [RELChecksum md5HashOfString:[sorted componentsJoinedByString:@""]];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	CreateRecent(userId1, groupId, members, user2[FUSER_NAME], user2[FUSER_PICTURE], @"private");
-	CreateRecent(userId2, groupId, members, user1[FUSER_NAME], user1[FUSER_PICTURE], @"private");
+	[RELPassword init:groupId];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	return groupId;
+	[Recent fetchMembers:groupId completion:^(NSMutableArray *userIds)
+	{
+		if ([userIds containsObject:userId1] == NO) [Recent createPrivate:userId1 GroupId:groupId Sender:user2 Members:members];
+		if ([userIds containsObject:userId2] == NO) [Recent createPrivate:userId2 GroupId:groupId Sender:user1 Members:members];
+	}];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	return @{@"groupId":groupId, @"members":members, @"description":user2[FUSER_FULLNAME], @"type":CHAT_PRIVATE};
 }
 
 #pragma mark - Multiple Chat methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-NSString* StartMultipleChat(NSMutableArray *users)
+NSDictionary* StartMultipleChat(NSMutableArray *users)
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[users addObject:[FUser currentUser]];
@@ -46,7 +51,7 @@ NSString* StartMultipleChat(NSMutableArray *users)
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	for (FUser *user in users)
 	{
-		[names addObject:user[FUSER_NAME]];
+		[names addObject:user[FUSER_FULLNAME]];
 		[members addObject:[user objectId]];
 	}
 	//---------------------------------------------------------------------------------------------------------------------------------------------
@@ -55,43 +60,38 @@ NSString* StartMultipleChat(NSMutableArray *users)
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	NSString *description = [names componentsJoinedByString:@", "];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	CreateRecents(groupId, members, description, [FUser picture], @"multiple");
+	[RELPassword init:groupId];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	return groupId;
+	[Recent createMultiple:groupId Description:description Members:members];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	return @{@"groupId":groupId, @"members":members, @"description":description, @"type":CHAT_MULTIPLE};
 }
 
 #pragma mark - Group Chat methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-void StartGroupChat(FObject *group)
+NSDictionary* StartGroupChat(FObject *group)
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
+	NSArray *members = group[FGROUP_MEMBERS];
+	NSString *groupId = [group objectId];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
 	NSString *picture = (group[FGROUP_PICTURE] != nil) ? group[FGROUP_PICTURE] : [FUser picture];
-	CreateRecents([group objectId], group[FGROUP_MEMBERS], group[FGROUP_NAME], picture, @"group");
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[RELPassword init:groupId];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[Recent createGroup:groupId Picture:picture Description:group[FGROUP_NAME] Members:members];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	return @{@"groupId":groupId, @"members":members, @"description":group[FGROUP_NAME], @"type":CHAT_GROUP};
 }
 
 #pragma mark - Restart Recent Chat methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-void RestartRecentChat(FObject *recent)
+NSDictionary* RestartRecentChat(DBRecent *dbrecent)
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	if ([recent[FRECENT_TYPE] isEqualToString:@"private"])
-	{
-		for (NSString *userId in recent[FRECENT_MEMBERS])
-		{
-			if ([userId isEqualToString:[FUser currentId]] == NO)
-				CreateRecent(userId, recent[FRECENT_GROUPID], recent[FRECENT_MEMBERS], [FUser name], [FUser picture], @"private");
-		}
-	}
+	NSArray *members = [dbrecent.members componentsSeparatedByString:@","];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if ([recent[FRECENT_TYPE] isEqualToString:@"multiple"])
-	{
-		CreateRecents(recent[FRECENT_GROUPID], recent[FRECENT_MEMBERS], recent[FRECENT_DESCRIPTION], recent[FRECENT_PICTURE], @"multiple");
-	}
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if ([recent[FRECENT_TYPE] isEqualToString:@"group"])
-	{
-		CreateRecents(recent[FRECENT_GROUPID], recent[FRECENT_MEMBERS], recent[FRECENT_DESCRIPTION], recent[FRECENT_PICTURE], @"group");
-	}
+	return @{@"groupId":dbrecent.groupId, @"members":members, @"description":dbrecent.description, @"type":dbrecent.type};
 }

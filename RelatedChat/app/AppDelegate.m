@@ -194,4 +194,35 @@
 	
 }
 
+#pragma mark - Helper methods
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)initUserStatuses
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[self initUserStatus:@"Available"];
+	[self initUserStatus:@"Busy"];
+	[self initUserStatus:@"At school"];
+	[self initUserStatus:@"At the movies"];
+	[self initUserStatus:@"At work"];
+	[self initUserStatus:@"Battery about to die"];
+	[self initUserStatus:@"Can't talk now"];
+	[self initUserStatus:@"In a meeting"];
+	[self initUserStatus:@"At the gym"];
+	[self initUserStatus:@"Sleeping"];
+	[self initUserStatus:@"Urgent calls only"];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)initUserStatus:(NSString *)name
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	FObject *object = [FObject objectWithPath:FUSERSTATUS_PATH];
+	object[FUSERSTATUS_NAME] = name;
+	[object saveInBackground:^(NSError *error)
+	{
+		if (error != nil) NSLog(@"initUserStatus error: %@", error);
+	}];
+}
+
 @end

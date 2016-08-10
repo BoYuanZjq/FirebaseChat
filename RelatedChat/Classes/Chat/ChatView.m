@@ -18,15 +18,23 @@
 
 #import "ChatView.h"
 #import "MapView.h"
+#import "PictureView.h"
 #import "StickersView.h"
 #import "ProfileView.h"
-#import "PictureView.h"
+#import "MembersView.h"
+#import "GroupDetailsView.h"
 #import "NavigationController.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 @interface ChatView()
 {
 	NSString *groupId;
+	NSArray *members;
+	NSString *description;
+	NSString *type;
+
+	FObject *group;
+	FUser *user2;
 
 	NSInteger typingCounter;
 
@@ -47,17 +55,29 @@
 	JSQMessagesBubbleImage *bubbleImageIncoming;
 	JSQMessagesAvatarImage *avatarImageBlank;
 }
+
+@property (strong, nonatomic) IBOutlet UIView *viewTitle;
+@property (strong, nonatomic) IBOutlet UILabel *labelTitle;
+@property (strong, nonatomic) IBOutlet UILabel *labelDetails;
+
 @end
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 @implementation ChatView
 
+@synthesize viewTitle, labelTitle, labelDetails;
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (id)initWith:(NSString *)groupId_
+- (id)initWith:(NSDictionary *)dictionary
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	self = [super init];
-	groupId = groupId_;
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	groupId = dictionary[@"groupId"];
+	members = dictionary[@"members"];
+	description = dictionary[@"description"];
+	type = dictionary[@"type"];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
 	return self;
 }
 
@@ -66,10 +86,19 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[super viewDidLoad];
-	self.title = @"Chat";
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	self.navigationItem.titleView = viewTitle;
+	[self updateTitleDetails];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"chat_back"]
 																	style:UIBarButtonItemStylePlain target:self action:@selector(actionBack)];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Details" style:UIBarButtonItemStylePlain target:self
+																			 action:@selector(actionDetails)];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[NotificationCenter addObserver:self selector:@selector(actionCleanup) name:NOTIFICATION_CLEANUP_CHATVIEW];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	loads = [[NSMutableArray alloc] init];
 	loadIds = [[NSMutableArray alloc] init];
@@ -79,6 +108,8 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	avatars = [[NSMutableDictionary alloc] init];
 	avatarIds = [[NSMutableArray alloc] init];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	JSQMessagesBubbleImageFactory *bubbleFactory = [[JSQMessagesBubbleImageFactory alloc] init];
 	bubbleImageOutgoing = [bubbleFactory outgoingMessagesBubbleImageWithColor:COLOR_OUTGOING];
@@ -95,12 +126,15 @@
 	UIMenuItem *menuItemSave = [[UIMenuItem alloc] initWithTitle:@"Save" action:@selector(actionSave:)];
 	[UIMenuController sharedMenuController].menuItems = @[menuItemCopy, menuItemDelete, menuItemSave];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	ClearRecentCounter(groupId);
+
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[Recent clearCounter:groupId];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	firebase1 = [[[FIRDatabase database] referenceWithPath:FMESSAGE_PATH] child:groupId];
 	firebase2 = [[[FIRDatabase database] referenceWithPath:FTYPING_PATH] child:groupId];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[self loadMessages];
+	[self fetchGroup];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,7 +158,7 @@
 	menu.menuItems = @[menuItemCopy, menuItemDelete, menuItemSave];
 }
 
-#pragma mark - Backend methods
+#pragma mark - Backend methods (message)
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)loadMessages
@@ -263,7 +297,7 @@
 	}
 }
 
-#pragma mark - Picture methods
+#pragma mark - Backend methods (avatar)
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)loadAvatar:(NSString *)userId
@@ -304,6 +338,20 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[self.collectionView reloadData];
+}
+
+#pragma mark - Backend methods (group)
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)fetchGroup
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	FObject *object = [FObject objectWithPath:FGROUP_PATH];
+	object[FGROUP_OBJECTID] = groupId;
+	[object fetchInBackground:^(NSError *error)
+	{
+		if (error == nil) group = object;
+	}];
 }
 
 #pragma mark - Message sendig methods
@@ -419,7 +467,7 @@
 - (NSString *)senderDisplayName
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	return [FUser name];
+	return [FUser fullname];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -447,14 +495,14 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	FObject *message = messages[indexPath.item];
-	NSString *userId = message[FMESSAGE_USERID];
+	NSString *senderId = message[FMESSAGE_SENDERID];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if (avatars[userId] == nil)
+	if (avatars[senderId] == nil)
 	{
-		[self loadAvatar:userId];
+		[self loadAvatar:senderId];
 		return avatarImageBlank;
 	}
-	else return avatars[userId];
+	else return avatars[senderId];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -637,7 +685,7 @@
 	FObject *message = messages[indexPath.item];
 	if ([self incoming:message])
 	{
-		ProfileView *profileView = [[ProfileView alloc] initWith:message[FMESSAGE_USERID] User:nil];
+		ProfileView *profileView = [[ProfileView alloc] initWithUserId:message[FMESSAGE_SENDERID] Chat:NO];
 		[self.navigationController pushViewController:profileView animated:YES];
 	}
 }
@@ -719,38 +767,42 @@
 - (void)actionBack
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	ClearRecentCounter(groupId);
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if (firebase1 != nil) [firebase1 removeAllObservers];
-	if (firebase2 != nil) [firebase2 removeAllObservers];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[self actionCleanup];
+	[Recent clearCounter:groupId];
 	[self.navigationController popViewControllerAnimated:YES];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)actionAttach
+- (void)actionDetails
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	[self.view endEditing:YES];
-	NSArray *menuItems = @[[[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_camera"] title:@"Camera"],
-						   [[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_audio"] title:@"Audio"],
-						   [[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_picture"] title:@"Picture"],
-						   [[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_video"] title:@"Video"],
-						   [[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_location"] title:@"Location"],
-						   [[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_sticker"] title:@"Sticker"]];
-	RNGridMenu *gridMenu = [[RNGridMenu alloc] initWithItems:menuItems];
-	gridMenu.delegate = self;
-	[gridMenu showInViewController:self center:CGPointMake(self.view.bounds.size.width/2, self.view.bounds.size.height/2)];
-}
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)actionStickers
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	StickersView *stickersView = [[StickersView alloc] init];
-	stickersView.delegate = self;
-	NavigationController *navController = [[NavigationController alloc] initWithRootViewController:stickersView];
-	[self presentViewController:navController animated:YES completion:nil];
+	if ([type isEqualToString:CHAT_PRIVATE])
+	{
+		for (NSString *userId in members)
+		{
+			if ([userId isEqualToString:[FUser currentId]] == NO)
+			{
+				ProfileView *profileView = [[ProfileView alloc] initWithUserId:userId Chat:NO];
+				[self.navigationController pushViewController:profileView animated:YES];
+			}
+		}
+	}
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	if ([type isEqualToString:CHAT_MULTIPLE])
+	{
+		MembersView *membersView = [[MembersView alloc] initWith:members];
+		[self.navigationController pushViewController:membersView animated:YES];
+	}
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	if ([type isEqualToString:CHAT_GROUP])
+	{
+		if (group != nil)
+		{
+			GroupDetailsView *groupDetailsView = [[GroupDetailsView alloc] initWithGroup:group Chat:NO];
+			[self.navigationController pushViewController:groupDetailsView animated:YES];
+		}
+		else [ProgressHUD showError:@"This group seems to be deleted."];
+	}
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -813,6 +865,32 @@
 	else [ProgressHUD showError:@"Save failed."];
 }
 
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)actionAttach
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[self.view endEditing:YES];
+	NSArray *menuItems = @[[[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_camera"] title:@"Camera"],
+						   [[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_audio"] title:@"Audio"],
+						   [[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_picture"] title:@"Picture"],
+						   [[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_video"] title:@"Video"],
+						   [[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_location"] title:@"Location"],
+						   [[RNGridMenuItem alloc] initWithImage:[UIImage imageNamed:@"chat_sticker"] title:@"Sticker"]];
+	RNGridMenu *gridMenu = [[RNGridMenu alloc] initWithItems:menuItems];
+	gridMenu.delegate = self;
+	[gridMenu showInViewController:self center:CGPointMake(self.view.bounds.size.width/2, self.view.bounds.size.height/2)];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)actionStickers
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	StickersView *stickersView = [[StickersView alloc] init];
+	stickersView.delegate = self;
+	NavigationController *navController = [[NavigationController alloc] initWithRootViewController:stickersView];
+	[self presentViewController:navController animated:YES completion:nil];
+}
+
 #pragma mark - RNGridMenuDelegate
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -868,20 +946,55 @@
 	[self messageSend:nil Video:nil Picture:picture Audio:nil];
 }
 
+#pragma mark - Cleanup methods
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)actionCleanup
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[NotificationCenter removeObserver:self];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	if (firebase1 != nil) [firebase1 removeAllObservers];
+	if (firebase2 != nil) [firebase2 removeAllObservers];
+}
+
 #pragma mark - Helper methods
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)updateTitleDetails
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	if ([type isEqualToString:CHAT_PRIVATE])
+	{
+		labelTitle.text = @"Private";
+		labelDetails.text = description;
+	}
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	if ([type isEqualToString:CHAT_MULTIPLE])
+	{
+		labelTitle.text = @"Multiple";
+		labelDetails.text = [NSString stringWithFormat:@"%ld members", [members count]];
+	}
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	if ([type isEqualToString:CHAT_GROUP])
+	{
+		labelTitle.text = description;
+		labelDetails.text = [NSString stringWithFormat:@"%ld members", [members count]];
+	}
+}
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (BOOL)incoming:(FObject *)message
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	return ([message[FMESSAGE_USERID] isEqualToString:[FUser currentId]] == NO);
+	return ([message[FMESSAGE_SENDERID] isEqualToString:[FUser currentId]] == NO);
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (BOOL)outgoing:(FObject *)message
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	return ([message[FMESSAGE_USERID] isEqualToString:[FUser currentId]] == YES);
+	return ([message[FMESSAGE_SENDERID] isEqualToString:[FUser currentId]] == YES);
 }
 
 @end

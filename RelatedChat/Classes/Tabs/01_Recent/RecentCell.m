@@ -15,8 +15,11 @@
 @interface RecentCell()
 
 @property (strong, nonatomic) IBOutlet UIImageView *imageUser;
+@property (strong, nonatomic) IBOutlet UILabel *labelInitials;
+
 @property (strong, nonatomic) IBOutlet UILabel *labelDescription;
 @property (strong, nonatomic) IBOutlet UILabel *labelLastMessage;
+
 @property (strong, nonatomic) IBOutlet UILabel *labelElapsed;
 @property (strong, nonatomic) IBOutlet UILabel *labelCounter;
 
@@ -25,57 +28,65 @@
 
 @implementation RecentCell
 
-@synthesize imageUser;
+@synthesize imageUser, labelInitials;
 @synthesize labelDescription, labelLastMessage;
 @synthesize labelElapsed, labelCounter;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)bindData:(FObject *)recent
+- (void)bindData:(DBRecent *)dbrecent
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	labelDescription.text = recent[FRECENT_DESCRIPTION];
+	labelDescription.text = dbrecent.description;
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	NSString *groupId = dbrecent.groupId;
+	NSString *cryptedMessage = dbrecent.lastMessage;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	dispatch_async(dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL), ^{
-		NSString *lastMessage = [RELCryptor decryptText:recent[FRECENT_LASTMESSAGE] groupId:recent[FRECENT_GROUPID]];
+		NSString *lastMessage = [RELCryptor decryptText:cryptedMessage groupId:groupId];
 		dispatch_async(dispatch_get_main_queue(), ^{
 			labelLastMessage.text = lastMessage;
 		});
 	});
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	NSDate *date = Number2Date(recent[FRECENT_UPDATEDAT]);
+	NSDate *date = [NSDate dateWithTimeIntervalSince1970:dbrecent.lastMessageDate];
 	NSTimeInterval seconds = [[NSDate date] timeIntervalSinceDate:date];
 	labelElapsed.text = TimeElapsed(seconds);
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	NSInteger counter = [recent[FRECENT_COUNTER] integerValue];
-	labelCounter.text = (counter != 0) ? [NSString stringWithFormat:@"%ld new", counter] : nil;
+	labelCounter.text = (dbrecent.counter != 0) ? [NSString stringWithFormat:@"%ld new", dbrecent.counter] : nil;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)loadImage:(FObject *)recent TableView:(UITableView *)tableView IndexPath:(NSIndexPath *)indexPath
+- (void)loadImage:(DBRecent *)dbrecent TableView:(UITableView *)tableView IndexPath:(NSIndexPath *)indexPath
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	imageUser.layer.cornerRadius = imageUser.frame.size.width/2;
 	imageUser.layer.masksToBounds = YES;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	NSString *path = [DownloadManager pathImage:recent[FRECENT_PICTURE]];
+	NSString *path = [DownloadManager pathImage:dbrecent.picture];
 	if (path == nil)
 	{
 		imageUser.image = [UIImage imageNamed:@"recent_blank"];
-		[self downloadImage:recent TableView:tableView IndexPath:indexPath];
+		labelInitials.text = dbrecent.senderInitials;
+		[self downloadImage:dbrecent TableView:tableView IndexPath:indexPath];
 	}
-	else imageUser.image = [[UIImage alloc] initWithContentsOfFile:path];
+	else
+	{
+		imageUser.image = [[UIImage alloc] initWithContentsOfFile:path];
+		labelInitials.text = nil;
+	}
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)downloadImage:(FObject *)recent TableView:(UITableView *)tableView IndexPath:(NSIndexPath *)indexPath
+- (void)downloadImage:(DBRecent *)dbrecent TableView:(UITableView *)tableView IndexPath:(NSIndexPath *)indexPath
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	[DownloadManager image:recent[FRECENT_PICTURE] completion:^(NSString *path, NSError *error, BOOL network)
+	[DownloadManager image:dbrecent.picture completion:^(NSString *path, NSError *error, BOOL network)
 	{
 		if ((error == nil) && ([tableView.indexPathsForVisibleRows containsObject:indexPath]))
 		{
 			RecentCell *cell = [tableView cellForRowAtIndexPath:indexPath];
 			cell.imageUser.image = [[UIImage alloc] initWithContentsOfFile:path];
+			cell.labelInitials.text = nil;
 		}
 	}];
 }

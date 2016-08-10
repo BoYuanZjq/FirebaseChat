@@ -15,6 +15,7 @@
 @interface PeopleCell()
 
 @property (strong, nonatomic) IBOutlet UIImageView *imageUser;
+@property (strong, nonatomic) IBOutlet UILabel *labelInitials;
 @property (strong, nonatomic) IBOutlet UILabel *labelName;
 
 @end
@@ -22,13 +23,13 @@
 
 @implementation PeopleCell
 
-@synthesize imageUser, labelName;
+@synthesize imageUser, labelInitials, labelName;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)bindData:(FUser *)user
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	labelName.text = user[FUSER_NAME];
+	labelName.text = user[FUSER_FULLNAME];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -42,9 +43,14 @@
 	if (path == nil)
 	{
 		imageUser.image = [UIImage imageNamed:@"people_blank"];
+		labelInitials.text = [user initials];
 		[self downloadImage:user TableView:tableView IndexPath:indexPath];
 	}
-	else imageUser.image = [[UIImage alloc] initWithContentsOfFile:path];
+	else
+	{
+		imageUser.image = [[UIImage alloc] initWithContentsOfFile:path];
+		labelInitials.text = nil;
+	}
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -57,6 +63,7 @@
 		{
 			PeopleCell *cell = [tableView cellForRowAtIndexPath:indexPath];
 			cell.imageUser.image = [[UIImage alloc] initWithContentsOfFile:path];
+			cell.labelInitials.text = nil;
 		}
 	}];
 }

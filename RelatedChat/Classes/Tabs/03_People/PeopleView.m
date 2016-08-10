@@ -79,7 +79,11 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if ([FUser currentId] != nil)
 	{
+		if ([FUser isOnboardOk])
+		{
 
+		}
+		else OnboardUser(self);
 	}
 	else LoginUser(self);
 }
@@ -119,7 +123,7 @@
 	for (FUser *user in users)
 	{
 		NSString *text_lower = [searchBar.text lowercaseString];
-		NSString *name_lower = user[FUSER_NAME_LOWER];
+		NSString *name_lower = user[FUSER_FULLNAME_LOWER];
 		if ([name_lower rangeOfString:text_lower].location != NSNotFound)
 		{
 			[searches addObject:user];
@@ -145,7 +149,7 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	for (FUser *object in objects)
 	{
-		NSInteger section = [[UILocalizedIndexedCollation currentCollation] sectionForObject:object collationStringSelector:@selector(name)];
+		NSInteger section = [[UILocalizedIndexedCollation currentCollation] sectionForObject:object collationStringSelector:@selector(fullname)];
 		[sections[section] addObject:object];
 	}
 	//---------------------------------------------------------------------------------------------------------------------------------------------
@@ -155,6 +159,8 @@
 }
 
 #pragma mark - User actions
+
+#pragma mark - Cleanup methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)actionCleanup
@@ -239,7 +245,7 @@
 	NSMutableArray *userstemp = sections[indexPath.section];
 	FUser *user = userstemp[indexPath.row];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	ProfileView *profileView = [[ProfileView alloc] initWith:nil User:user];
+	ProfileView *profileView = [[ProfileView alloc] initWithUser:user Chat:YES];
 	profileView.hidesBottomBarWhenPushed = YES;
 	[self.navigationController pushViewController:profileView animated:YES];
 }

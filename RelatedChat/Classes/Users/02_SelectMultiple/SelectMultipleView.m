@@ -94,7 +94,7 @@
 	for (FUser *user in users)
 	{
 		NSString *text_lower = [searchBar.text lowercaseString];
-		NSString *name_lower = user[FUSER_NAME_LOWER];
+		NSString *name_lower = user[FUSER_FULLNAME_LOWER];
 		if ([name_lower rangeOfString:text_lower].location != NSNotFound)
 		{
 			[searches addObject:user];
@@ -120,7 +120,7 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	for (FUser *object in objects)
 	{
-		NSInteger section = [[UILocalizedIndexedCollation currentCollation] sectionForObject:object collationStringSelector:@selector(name)];
+		NSInteger section = [[UILocalizedIndexedCollation currentCollation] sectionForObject:object collationStringSelector:@selector(fullname)];
 		[sections[section] addObject:object];
 	}
 	//---------------------------------------------------------------------------------------------------------------------------------------------
@@ -216,7 +216,7 @@
 	NSMutableArray *userstemp = sections[indexPath.section];
 	FUser *user = userstemp[indexPath.row];
 
-	cell.textLabel.text = user[FUSER_NAME];
+	cell.textLabel.text = user[FUSER_FULLNAME];
 	cell.accessoryType = [selection containsObject:[user objectId]] ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
 
 	return cell;

@@ -14,12 +14,10 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 @interface RegisterEmailView()
 
-@property (strong, nonatomic) IBOutlet UITableViewCell *cellName;
 @property (strong, nonatomic) IBOutlet UITableViewCell *cellEmail;
 @property (strong, nonatomic) IBOutlet UITableViewCell *cellPassword;
 @property (strong, nonatomic) IBOutlet UITableViewCell *cellButton;
 
-@property (strong, nonatomic) IBOutlet UITextField *fieldName;
 @property (strong, nonatomic) IBOutlet UITextField *fieldEmail;
 @property (strong, nonatomic) IBOutlet UITextField *fieldPassword;
 
@@ -28,8 +26,8 @@
 
 @implementation RegisterEmailView
 
-@synthesize cellName, cellEmail, cellPassword, cellButton;
-@synthesize fieldName, fieldEmail, fieldPassword;
+@synthesize cellEmail, cellPassword, cellButton;
+@synthesize fieldEmail, fieldPassword;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)viewDidLoad
@@ -48,7 +46,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[super viewDidAppear:animated];
-	[fieldName becomeFirstResponder];
+	[fieldEmail becomeFirstResponder];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -64,17 +62,15 @@
 - (void)actionRegister
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	NSString *name = fieldName.text;
 	NSString *email = [fieldEmail.text lowercaseString];
 	NSString *password = fieldPassword.text;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if ([name length] == 0)		{ [ProgressHUD showError:@"Please enter your name."]; return; }
 	if ([email length] == 0)	{ [ProgressHUD showError:@"Please enter your email."]; return; }
 	if ([password length] == 0)	{ [ProgressHUD showError:@"Please enter your password."]; return; }
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[ProgressHUD show:nil Interaction:NO];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[FUser createUserWithEmail:email password:password name:name completion:^(FUser *user, NSError *error)
+	[FUser createUserWithEmail:email password:password completion:^(FUser *user, NSError *error)
 	{
 		if (error == nil)
 		{
@@ -97,17 +93,16 @@
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	return 4;
+	return 3;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	if ((indexPath.section == 0) && (indexPath.row == 0)) return cellName;
-	if ((indexPath.section == 0) && (indexPath.row == 1)) return cellEmail;
-	if ((indexPath.section == 0) && (indexPath.row == 2)) return cellPassword;
-	if ((indexPath.section == 0) && (indexPath.row == 3)) return cellButton;
+	if ((indexPath.section == 0) && (indexPath.row == 0)) return cellEmail;
+	if ((indexPath.section == 0) && (indexPath.row == 1)) return cellPassword;
+	if ((indexPath.section == 0) && (indexPath.row == 2)) return cellButton;
 	return nil;
 }
 
@@ -119,7 +114,7 @@
 {
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if (indexPath.row == 3) [self actionRegister];
+	if (indexPath.row == 2) [self actionRegister];
 }
 
 #pragma mark - UITextField delegate
@@ -128,10 +123,6 @@
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	if (textField == fieldName)
-	{
-		[fieldEmail becomeFirstResponder];
-	}
 	if (textField == fieldEmail)
 	{
 		[fieldPassword becomeFirstResponder];

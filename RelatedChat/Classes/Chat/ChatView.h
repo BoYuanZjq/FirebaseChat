@@ -17,6 +17,6 @@
 @interface ChatView : JSQMessagesViewController <RNGridMenuDelegate, UIImagePickerControllerDelegate, IQAudioRecorderControllerDelegate, StickersDelegate>
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-- (id)initWith:(NSString *)groupId_;
+- (id)initWith:(NSDictionary *)dictionary;
 
 @end

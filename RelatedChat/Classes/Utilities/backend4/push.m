@@ -18,29 +18,19 @@ void SendPushNotification1(FObject *message)
 	NSString *groupId = message[FMESSAGE_GROUPID];
 	NSString *text = [RELCryptor decryptText:message[FMESSAGE_TEXT] groupId:groupId];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	FIRDatabaseReference *firebase = [[FIRDatabase database] referenceWithPath:FRECENT_PATH];
-	FIRDatabaseQuery *query = [[firebase queryOrderedByChild:FRECENT_GROUPID] queryEqualToValue:groupId];
-	[query observeSingleEventOfType:FIRDataEventTypeValue withBlock:^(FIRDataSnapshot *snapshot)
+	[Recent fetchMembers:groupId completion:^(NSMutableArray *userIds)
 	{
-		if (snapshot.value != [NSNull null])
-		{
-			NSMutableArray *members = [[NSMutableArray alloc] init];
-			//-------------------------------------------------------------------------------------------------------------------------------------
-			for (NSDictionary *dictionary in [snapshot.value allValues])
-			{
-				NSString *userId = dictionary[FRECENT_USERID];
-				if ([userId isEqualToString:[FUser currentId]] == NO)
-					[members addObject:userId];
-			}
-			//-------------------------------------------------------------------------------------------------------------------------------------
-			SendPushNotification2(members, text);
-		}
+		[userIds removeObject:[FUser currentId]];
+		SendPushNotification2(userIds, text);
 	}];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-void SendPushNotification2(NSArray *members, NSString *text)
+void SendPushNotification2(NSArray *userIds, NSString *text)
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-
+	//for (NSString *userId in userIds)
+	//{
+	//	NSLog(@"SendPushNotification2: %@ - %@", userId, text);
+	//}
 }

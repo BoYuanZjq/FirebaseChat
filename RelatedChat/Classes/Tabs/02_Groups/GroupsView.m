@@ -12,7 +12,7 @@
 #import "GroupsView.h"
 #import "GroupsCell.h"
 #import "CreateGroupView.h"
-#import "GroupSettingsView.h"
+#import "GroupDetailsView.h"
 #import "NavigationController.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -83,7 +83,11 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if ([FUser currentId] != nil)
 	{
-		[self loadGroups];
+		if ([FUser isOnboardOk])
+		{
+			[self loadGroups];
+		}
+		else OnboardUser(self);
 	}
 	else LoginUser(self);
 }
@@ -144,6 +148,8 @@
 	NavigationController *navController = [[NavigationController alloc] initWithRootViewController:createGroupView];
 	[self presentViewController:navController animated:YES completion:nil];
 }
+
+#pragma mark - Cleanup methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)actionCleanup
@@ -216,9 +222,9 @@
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	FObject *group = seaching ? searches[indexPath.row] : groups[indexPath.row];
-	GroupSettingsView *groupSettingsView = [[GroupSettingsView alloc] initWith:group];
-	groupSettingsView.hidesBottomBarWhenPushed = YES;
-	[self.navigationController pushViewController:groupSettingsView animated:YES];
+	GroupDetailsView *groupDetailsView = [[GroupDetailsView alloc] initWithGroup:group Chat:YES];
+	groupDetailsView.hidesBottomBarWhenPushed = YES;
+	[self.navigationController pushViewController:groupDetailsView animated:YES];
 }
 
 #pragma mark - UISearchBarDelegate

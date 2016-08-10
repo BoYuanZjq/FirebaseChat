@@ -61,7 +61,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	FIRDatabaseReference *firebase = [[FIRDatabase database] referenceWithPath:FUSER_PATH];
-	FIRDatabaseQuery *query = [[firebase queryOrderedByChild:FUSER_NAME_LOWER] queryLimitedToLast:1];
+	FIRDatabaseQuery *query = [[firebase queryOrderedByChild:FUSER_FULLNAME_LOWER] queryLimitedToLast:1];
 	[query observeSingleEventOfType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot *snapshot)
 	{
 		NSDictionary *dictionary = snapshot.value;
@@ -74,7 +74,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	FIRDatabaseReference *firebase = [[FIRDatabase database] referenceWithPath:FUSER_PATH];
-	FIRDatabaseQuery *query = [firebase queryOrderedByChild:FUSER_NAME_LOWER];
+	FIRDatabaseQuery *query = [firebase queryOrderedByChild:FUSER_FULLNAME_LOWER];
 	[query observeEventType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot *snapshot)
 	{
 		FUser *user = [[FUser alloc] initWithPath:FUSER_PATH dictionary:snapshot.value];

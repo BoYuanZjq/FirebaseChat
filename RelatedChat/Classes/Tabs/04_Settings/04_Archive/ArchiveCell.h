@@ -9,16 +9,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import <Foundation/Foundation.h>
+#import "utilities.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-@interface Recents : NSObject
+@interface ArchiveCell : SWTableViewCell
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-@property (nonatomic, strong) NSMutableArray *objects;
+- (void)bindData:(DBRecent *)dbrecent;
 
-+ (NSMutableArray *)objects;
-
-+ (void)load:(void (^)(NSMutableArray *objects))completion;
+- (void)loadImage:(DBRecent *)dbrecent TableView:(UITableView *)tableView IndexPath:(NSIndexPath *)indexPath;
 
 @end

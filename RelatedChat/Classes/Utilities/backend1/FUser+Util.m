@@ -18,8 +18,10 @@
 #pragma mark - Class methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-+ (NSString *)name					{	return [[FUser currentUser] name];						}
++ (NSString *)fullname				{	return [[FUser currentUser] fullname];					}
++ (NSString *)initials				{	return [[FUser currentUser] initials];					}
 + (NSString *)picture				{	return [[FUser currentUser] picture];					}
++ (NSString *)status				{	return [[FUser currentUser] status];					}
 + (NSString *)loginMethod			{	return [[FUser currentUser] loginMethod];				}
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 + (NSInteger)keepMedia				{	return [[FUser currentUser] keepMedia];					}
@@ -28,13 +30,15 @@
 + (NSInteger)networkAudio			{	return [[FUser currentUser] networkAudio];				}
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 + (BOOL)autoSaveMedia				{	return [[FUser currentUser] autoSaveMedia];				}
++ (BOOL)isOnboardOk					{	return [[FUser currentUser] isOnboardOk];				}
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 #pragma mark - Instance methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (NSString *)name					{	return self[FUSER_NAME];								}
+- (NSString *)fullname				{	return self[FUSER_FULLNAME];							}
 - (NSString *)picture				{	return self[FUSER_PICTURE];								}
+- (NSString *)status				{	return self[FUSER_STATUS];								}
 - (NSString *)loginMethod			{	return self[FUSER_LOGINMETHOD];							}
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (NSInteger)keepMedia				{	return [self[FUSER_KEEPMEDIA] integerValue];			}
@@ -44,5 +48,14 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (BOOL)autoSaveMedia				{	return [self[FUSER_AUTOSAVEMEDIA] boolValue];			}
 //-------------------------------------------------------------------------------------------------------------------------------------------------
+- (BOOL)isOnboardOk					{	return (self[FUSER_FULLNAME] != nil);					}
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (NSString *)initials
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	return [NSString stringWithFormat:@"%@%@", [self[FUSER_FIRSTNAME] substringToIndex:1], [self[FUSER_LASTNAME] substringToIndex:1]];
+}
 
 @end

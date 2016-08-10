@@ -24,6 +24,7 @@
 #import "ProgressHUD.h"
 #import "Reachability.h"
 #import "RNGridMenu.h"
+#import "SWTableViewCell.h"
 
 #import "AppConstant.h"
 
@@ -34,13 +35,13 @@
 
 #import "Groups.h"
 #import "Messages.h"
-#import "Recents.h"
 #import "Users.h"
 #import "UserStatuses.h"
 
+#import "Recent.h"
+
 #import "chat.h"
 #import "push.h"
-#import "recent.h"
 #import "user.h"
 
 #import "NotificationCenter.h"
@@ -48,5 +49,7 @@
 #import "camera.h"
 #import "common.h"
 #import "converter.h"
+
+#import "DBRecent.h"
 
 #endif

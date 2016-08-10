@@ -9,19 +9,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import <Foundation/Foundation.h>
+#import "utilities.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-void			CreateRecent			(NSString *userId, NSString *groupId, NSArray *members, NSString *desc, NSString *profile, NSString *type);
-void			CreateRecents			(NSString *groupId, NSArray *members, NSString *desc, NSString *profile, NSString *type);
-void			CreateRecentItem		(NSString *userId, NSString *groupId, NSArray *members, NSString *desc, NSString *profile, NSString *type);
+@protocol CountriesDelegate
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+
+- (void)didSelectCountry:(NSString *)country CountryCode:(NSString *)countryCode;
+
+@end
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-void			UpdateRecents			(NSString *groupId, NSString *lastMessage);
-void			UpdateRecentItem		(FObject *recent, NSString *lastMessage);
-
-void			UpdateGroupMembers		(FObject *group);
-void			UpdateRecentMembers		(FObject *recent, NSArray *members);
-
+@interface CountriesView : UITableViewController
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-void			ClearRecentCounter		(NSString *groupId);
+
+@property (nonatomic, assign) IBOutlet id<CountriesDelegate>delegate;
+
+@end

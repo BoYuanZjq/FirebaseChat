@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)signInWithEmail:(NSString *)email password:(NSString *)password
 			 completion:(void (^)(FUser *user, NSError *error))completion;
 
-+ (void)createUserWithEmail:(NSString *)email password:(NSString *)password name:(NSString *)name
++ (void)createUserWithEmail:(NSString *)email password:(NSString *)password
 				 completion:(void (^)(FUser *user, NSError *error))completion;
 
 + (void)signInWithFacebook:(UIViewController *)viewController

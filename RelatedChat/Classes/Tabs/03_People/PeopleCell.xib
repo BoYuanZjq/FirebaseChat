@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15G31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
@@ -22,6 +22,16 @@
                             <constraint firstAttribute="height" constant="40" id="qjo-4m-hZL"/>
                         </constraints>
                     </imageView>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QVE-ZX-yvO">
+                        <rect key="frame" x="10" y="5" width="40" height="40"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="40" id="Ggf-Mc-Dhd"/>
+                            <constraint firstAttribute="height" constant="40" id="eKA-KP-KNk"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <nil key="highlightedColor"/>
+                    </label>
                     <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Name" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="uxG-h3-jPt">
                         <rect key="frame" x="60" y="0.0" width="245" height="50"/>
                         <fontDescription key="fontDescription" type="system" weight="medium" pointSize="15"/>
@@ -29,16 +39,19 @@
                     </label>
                 </subviews>
                 <constraints>
+                    <constraint firstItem="QVE-ZX-yvO" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leadingMargin" constant="2" id="3LO-TI-8nT"/>
                     <constraint firstItem="uxG-h3-jPt" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leadingMargin" constant="52" id="4cL-JT-a2v"/>
                     <constraint firstAttribute="bottomMargin" secondItem="uxG-h3-jPt" secondAttribute="bottom" constant="-9" id="D8Z-Of-baB"/>
                     <constraint firstItem="Ifk-Hu-PIe" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leadingMargin" constant="2" id="PId-rH-HSS"/>
                     <constraint firstItem="Ifk-Hu-PIe" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="topMargin" constant="-3" id="YDs-ML-4EF"/>
                     <constraint firstAttribute="trailingMargin" secondItem="uxG-h3-jPt" secondAttribute="trailing" constant="7" id="c7Q-cq-YxD"/>
+                    <constraint firstItem="QVE-ZX-yvO" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="topMargin" constant="-3" id="dcN-2j-uSQ"/>
                     <constraint firstItem="uxG-h3-jPt" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="topMargin" constant="-8" id="du4-ar-zId"/>
                 </constraints>
             </tableViewCellContentView>
             <connections>
                 <outlet property="imageUser" destination="Ifk-Hu-PIe" id="jXg-NP-iy1"/>
+                <outlet property="labelInitials" destination="QVE-ZX-yvO" id="i29-gB-ee1"/>
                 <outlet property="labelName" destination="uxG-h3-jPt" id="jBm-Wl-JXs"/>
             </connections>
             <point key="canvasLocation" x="423" y="544"/>

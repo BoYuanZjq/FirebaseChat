@@ -18,8 +18,8 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 @interface Incoming()
 {
-	NSString *userId;
-	NSString *name;
+	NSString *senderId;
+	NSString *senderName;
 	NSDate *date;
 
 	BOOL wifi;
@@ -52,11 +52,11 @@
 - (JSQMessage *)createMessage
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	userId = message[FMESSAGE_USERID];
-	name = message[FMESSAGE_USER_NAME];
+	senderId = message[FMESSAGE_SENDERID];
+	senderName = message[FMESSAGE_SENDERNAME];
 	date = Number2Date(message[FMESSAGE_CREATEDAT]);
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	maskOutgoing = [userId isEqualToString:[FUser currentId]];
+	maskOutgoing = [senderId isEqualToString:[FUser currentId]];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if ([message[FMESSAGE_TYPE] isEqualToString:MESSAGE_TEXT])		return [self createTextMessage];
 	if ([message[FMESSAGE_TYPE] isEqualToString:MESSAGE_EMOJI])		return [self createEmojiMessage];
@@ -76,7 +76,7 @@
 {
 	NSString *text = [RELCryptor decryptText:message[FMESSAGE_TEXT] groupId:message[FMESSAGE_GROUPID]];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	return [[JSQMessage alloc] initWithSenderId:userId senderDisplayName:name date:date text:text];
+	return [[JSQMessage alloc] initWithSenderId:senderId senderDisplayName:senderName date:date text:text];
 }
 
 #pragma mark - Emoji message
@@ -90,7 +90,7 @@
 	EmojiMediaItem *mediaItem = [[EmojiMediaItem alloc] initWithText:text];
 	mediaItem.appliesMediaViewMaskAsOutgoing = maskOutgoing;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	return [[JSQMessage alloc] initWithSenderId:userId senderDisplayName:name date:date media:mediaItem];
+	return [[JSQMessage alloc] initWithSenderId:senderId senderDisplayName:senderName date:date media:mediaItem];
 }
 
 #pragma mark - Picture message
@@ -107,7 +107,7 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[MediaManager loadPicture:mediaItem message:message user:[FUser currentUser] wifi:wifi collectionView:collectionView];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	return [[JSQMessage alloc] initWithSenderId:userId senderDisplayName:name date:date media:mediaItem];
+	return [[JSQMessage alloc] initWithSenderId:senderId senderDisplayName:senderName date:date media:mediaItem];
 }
 
 #pragma mark - Video message
@@ -120,7 +120,7 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[MediaManager loadVideo:mediaItem message:message user:[FUser currentUser] wifi:wifi collectionView:collectionView];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	return [[JSQMessage alloc] initWithSenderId:userId senderDisplayName:name date:date media:mediaItem];
+	return [[JSQMessage alloc] initWithSenderId:senderId senderDisplayName:senderName date:date media:mediaItem];
 }
 
 #pragma mark - Audio message
@@ -134,7 +134,7 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[MediaManager loadAudio:mediaItem message:message user:[FUser currentUser] wifi:wifi collectionView:collectionView];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	return [[JSQMessage alloc] initWithSenderId:userId senderDisplayName:name date:date media:mediaItem];
+	return [[JSQMessage alloc] initWithSenderId:senderId senderDisplayName:senderName date:date media:mediaItem];
 }
 
 #pragma mark - Location message
@@ -154,7 +154,7 @@
 		[collectionView reloadData];
 	}];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	return [[JSQMessage alloc] initWithSenderId:userId senderDisplayName:name date:date media:mediaItem];
+	return [[JSQMessage alloc] initWithSenderId:senderId senderDisplayName:senderName date:date media:mediaItem];
 }
 
 @end

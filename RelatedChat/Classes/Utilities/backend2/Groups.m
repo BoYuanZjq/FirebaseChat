@@ -49,8 +49,9 @@
 + (void)load:(void (^)(NSMutableArray *objects))completion
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	FIRDatabaseReference *firebase = [[[FIRDatabase database] referenceWithPath:FGROUP_PATH] child:[FUser currentId]];
-	[firebase observeSingleEventOfType:FIRDataEventTypeValue withBlock:^(FIRDataSnapshot *snapshot)
+	FIRDatabaseReference *firebase = [[FIRDatabase database] referenceWithPath:FGROUP_PATH];
+	FIRDatabaseQuery *query = [[firebase queryOrderedByChild:FGROUP_USERID] queryEqualToValue:[FUser currentId]];
+	[query observeSingleEventOfType:FIRDataEventTypeValue withBlock:^(FIRDataSnapshot *snapshot)
 	{
 		[[self objects] removeAllObjects];
 		//-----------------------------------------------------------------------------------------------------------------------------------------
@@ -59,7 +60,7 @@
 			NSArray *sorted = [self sort:snapshot.value];
 			for (NSDictionary *dictionary in sorted)
 			{
-				FObject *object = [FObject objectWithPath:FGROUP_PATH Subpath:[FUser currentId] dictionary:dictionary];
+				FObject *object = [FObject objectWithPath:FGROUP_PATH dictionary:dictionary];
 				[[self objects] addObject:object];
 			}
 		}

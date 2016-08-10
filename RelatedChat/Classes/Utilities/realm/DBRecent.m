@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016 Related Code - http://relatedcode.com
+// Copyright (c) 2016 Related Code - http//relatedcode.com
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -11,12 +11,15 @@
 
 #import "utilities.h"
 
-#import "SelectMultipleView.h"
+@implementation DBRecent
+
+@synthesize description;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-@interface GroupSettingsView : UITableViewController <UIAlertViewDelegate, SelectMultipleDelegate>
++ (NSString *)primaryKey
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-
-- (id)initWith:(FObject *)group_;
+{
+	return FRECENT_OBJECTID;
+}
 
 @end

@@ -13,4 +13,4 @@
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 void			SendPushNotification1	(FObject *message);
-void			SendPushNotification2	(NSArray *members, NSString *text);
+void			SendPushNotification2	(NSArray *userIds, NSString *text);

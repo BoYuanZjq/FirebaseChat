@@ -9,16 +9,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import "GroupSettingsView.h"
+#import "GroupDetailsView.h"
 #import "SelectMultipleView.h"
 #import "ChatView.h"
 #import "ProfileView.h"
 #import "NavigationController.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-@interface GroupSettingsView()
+@interface GroupDetailsView()
 {
 	FObject *group;
+	BOOL isChatEnabled;
+
 	NSMutableArray *users;
 }
 
@@ -26,22 +28,23 @@
 @property (strong, nonatomic) IBOutlet UIImageView *imageGroup;
 @property (strong, nonatomic) IBOutlet UILabel *labelName;
 
-@property (strong, nonatomic) IBOutlet UITableViewCell *cellName;
+@property (strong, nonatomic) IBOutlet UITableViewCell *cellChat;
 
 @end
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-@implementation GroupSettingsView
+@implementation GroupDetailsView
 
 @synthesize viewHeader, imageGroup, labelName;
-@synthesize cellName;
+@synthesize cellChat;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (id)initWith:(FObject *)group_
+- (id)initWithGroup:(FObject *)group_ Chat:(BOOL)chat_
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	self = [super init];
 	group = group_;
+	isChatEnabled = chat_;
 	return self;
 }
 
@@ -66,7 +69,7 @@
 	[self loadUsers];
 }
 
-#pragma mark - Backend actions
+#pragma mark - Backend actions (load)
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)loadGroup
@@ -92,6 +95,100 @@
 	[self.tableView reloadData];
 }
 
+#pragma mark - Backend actions (save)
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)saveGroupName:(NSString *)name
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	group[FGROUP_NAME] = name;
+	[group saveInBackground:^(NSError *error)
+	{
+		if (error == nil)
+		{
+			labelName.text = name;
+			[Recent updateDescription:group];
+		}
+		else [ProgressHUD showError:@"Network error."];
+	}];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)saveGroupPicture:(NSString *)linkPicture
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	group[FGROUP_PICTURE] = linkPicture;
+	[group saveInBackground:^(NSError *error)
+	{
+		if (error == nil)
+		{
+			[Recent updatePicture:group];
+		}
+		else [ProgressHUD showError:@"Network error."];
+	}];
+}
+
+#pragma mark - Backend actions (members)
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)addGroupMembers:(NSArray *)users_
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	for (FUser *user in users_)
+	{
+		if ([group[FGROUP_MEMBERS] containsObject:[user objectId]] == NO)
+			[group[FGROUP_MEMBERS] addObject:[user objectId]];
+	}
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[group saveInBackground:^(NSError *error)
+	{
+		if (error == nil)
+		{
+			[self loadUsers];
+			StartGroupChat(group);
+			[Recent updateMembers:group];
+		}
+		else [ProgressHUD showError:@"Network error."];
+	}];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)delGroupMember:(FUser *)user
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[group[FGROUP_MEMBERS] removeObject:[user objectId]];
+	[group saveInBackground:^(NSError *error)
+	{
+		if (error == nil)
+		{
+			[Recent updateMembers:group];
+		}
+		else [ProgressHUD showError:@"Network error."];
+	}];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)leaveGroup
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[ProgressHUD show:nil Interaction:NO];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[group[FGROUP_MEMBERS] removeObject:[FUser currentId]];
+	[group saveInBackground:^(NSError *error)
+	{
+		if (error == nil)
+		{
+			[ProgressHUD dismiss];
+			[Recent updateMembers:group];
+			[self.navigationController popToRootViewControllerAnimated:YES];
+			[NotificationCenter post:NOTIFICATION_CLEANUP_CHATVIEW];
+		}
+		else [ProgressHUD showError:@"Network error."];
+	}];
+}
+
+#pragma mark - Backend actions (delete)
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)deleteGroup
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -103,7 +200,8 @@
 		if (error == nil)
 		{
 			[ProgressHUD dismiss];
-			[self.navigationController popViewControllerAnimated:YES];
+			[self.navigationController popToRootViewControllerAnimated:YES];
+			[NotificationCenter post:NOTIFICATION_CLEANUP_CHATVIEW];
 		}
 		else [ProgressHUD showError:@"Network error."];
 	}];
@@ -113,6 +211,13 @@
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)actionMore
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	if ([self isGroupOwner]) [self actionMoreOwner]; else [self actionMoreMember];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)actionMoreOwner
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
@@ -128,6 +233,20 @@
 	UIAlertAction *action5 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
 
 	[alert addAction:action1]; [alert addAction:action2]; [alert addAction:action3]; [alert addAction:action4]; [alert addAction:action5];
+	[self presentViewController:alert animated:YES completion:nil];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)actionMoreMember
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+
+	UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"Leave group" style:UIAlertActionStyleDestructive
+													handler:^(UIAlertAction *action) { [self leaveGroup]; }];
+	UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+
+	[alert addAction:action1]; [alert addAction:action2];
 	[self presentViewController:alert animated:YES completion:nil];
 }
 
@@ -175,9 +294,8 @@
 - (void)actionChat
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	StartGroupChat(group);
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	ChatView *chatView = [[ChatView alloc] initWith:[group objectId]];
+	NSDictionary *dictionary = StartGroupChat(group);
+	ChatView *chatView = [[ChatView alloc] initWith:dictionary];
 	[self.navigationController pushViewController:chatView animated:YES];
 }
 
@@ -187,21 +305,7 @@
 - (void)didSelectMultipleUsers:(NSMutableArray *)users_
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	for (FUser *user in users_)
-	{
-		if ([group[FGROUP_MEMBERS] containsObject:[user objectId]] == NO)
-			[group[FGROUP_MEMBERS] addObject:[user objectId]];
-	}
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[group saveInBackground:^(NSError *error)
-	{
-		if (error == nil)
-		{
-			[self loadUsers];
-			UpdateGroupMembers(group);
-		}
-		else [ProgressHUD showError:@"Network error."];
-	}];
+	[self addGroupMembers:users_];
 }
 
 #pragma mark - UIAlertViewDelegate
@@ -216,12 +320,7 @@
 		NSString *name = textField.text;
 		if ([name length] != 0)
 		{
-			group[FGROUP_NAME] = name;
-			[group saveInBackground:^(NSError *error)
-			{
-				if (error == nil) labelName.text = name;
-				else [ProgressHUD showError:@"Network error."];
-			}];
+			[self saveGroupName:name];
 		}
 		else [ProgressHUD showError:@"Group name must be specified."];
 	}
@@ -245,12 +344,8 @@
 	{
 		if (error == nil)
 		{
-			group[FGROUP_PICTURE] = metadata.downloadURL.absoluteString;
-			[group saveInBackground:^(NSError *error)
-			{
-				if (error == nil) imageGroup.image = imagePicture;
-				else [ProgressHUD showError:@"Network error."];
-			}];
+			imageGroup.image = imagePicture;
+			[self saveGroupPicture:metadata.downloadURL.absoluteString];
 		}
 		else [ProgressHUD showError:@"Network error."];
 	}];
@@ -281,7 +376,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	if (section == 0) return nil;
-	if (section == 1) return [self titleForUsersHeader];
+	if (section == 1) return [self titleForHeaderMembers];
 	return nil;
 }
 
@@ -289,7 +384,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	if ((indexPath.section == 0) && (indexPath.row == 0)) return cellName;
+	if ((indexPath.section == 0) && (indexPath.row == 0)) return cellChat;
 	if (indexPath.section == 1)
 	{
 		return [self tableView:tableView cellForRowAtIndexPath1:indexPath];
@@ -305,7 +400,7 @@
 	if (cell == nil) cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"cell"];
 
 	FUser *user = users[indexPath.row];
-	cell.textLabel.text = user[FUSER_NAME];
+	cell.textLabel.text = user[FUSER_FULLNAME];
 
 	return cell;
 }
@@ -316,8 +411,11 @@
 {
 	if (indexPath.section == 1)
 	{
-		FUser *user = users[indexPath.row];
-		return ([user isCurrent] == NO);
+		if ([self isGroupOwner])
+		{
+			FUser *user = users[indexPath.row];
+			return ([user isCurrent] == NO);
+		}
 	}
 	return NO;
 }
@@ -327,16 +425,11 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	FUser *user = users[indexPath.row];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[users removeObject:user];
+	[self delGroupMember:user];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[group[FGROUP_MEMBERS] removeObject:[user objectId]];
-	[group saveInBackground:^(NSError *error)
-	{
-		if (error == nil) UpdateGroupMembers(group);
-		else [ProgressHUD showError:@"Network error."];
-	}];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[self.tableView headerViewForSection:1].textLabel.text = [self titleForUsersHeader];
+	[self.tableView headerViewForSection:1].textLabel.text = [self titleForHeaderMembers];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[self.tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
 }
@@ -349,14 +442,17 @@
 {
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if ((indexPath.section == 0) && (indexPath.row == 0)) [self actionChat];
+	if ((indexPath.section == 0) && (indexPath.row == 0))
+	{
+		if (isChatEnabled) [self actionChat]; else [self.navigationController popViewControllerAnimated:YES];
+	}
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if (indexPath.section == 1)
 	{
 		FUser *user = users[indexPath.row];
 		if ([user isCurrent] == NO)
 		{
-			ProfileView *profileView = [[ProfileView alloc] initWith:nil User:user];
+			ProfileView *profileView = [[ProfileView alloc] initWithUser:user Chat:YES];
 			[self.navigationController pushViewController:profileView animated:YES];
 		}
 		else [ProgressHUD showSuccess:@"This is you."];
@@ -366,11 +462,18 @@
 #pragma mark - Helper methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (NSString *)titleForUsersHeader
+- (NSString *)titleForHeaderMembers
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	NSString *text = ([users count] > 1) ? @"MEMBERS" : @"MEMBER";
 	return [NSString stringWithFormat:@"%ld %@", [users count], text];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (BOOL)isGroupOwner
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	return [group[FGROUP_USERID] isEqualToString:[FUser currentId]];
 }
 
 @end

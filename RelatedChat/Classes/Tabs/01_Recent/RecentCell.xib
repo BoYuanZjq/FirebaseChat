@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15G31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
@@ -22,6 +22,16 @@
                             <constraint firstAttribute="width" constant="50" id="Ocz-rb-Dyr"/>
                         </constraints>
                     </imageView>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lLy-F7-ciQ">
+                        <rect key="frame" x="10" y="10" width="50" height="50"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="50" id="0V3-XF-hHC"/>
+                            <constraint firstAttribute="width" constant="50" id="GfY-OG-B1c"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="19"/>
+                        <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <nil key="highlightedColor"/>
+                    </label>
                     <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Name" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="uxG-h3-jPt">
                         <rect key="frame" x="70" y="13" width="190" height="21"/>
                         <fontDescription key="fontDescription" type="system" weight="medium" pointSize="15"/>
@@ -63,10 +73,12 @@
                     <constraint firstItem="Ifk-Hu-PIe" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="topMargin" constant="2" id="cx3-Bc-neE"/>
                     <constraint firstAttribute="trailingMargin" secondItem="1Bu-wA-gQI" secondAttribute="trailing" constant="2" id="dyJ-iJ-LkL"/>
                     <constraint firstItem="aCl-zV-J5y" firstAttribute="bottom" secondItem="uxG-h3-jPt" secondAttribute="bottom" id="gJh-rz-4Bu"/>
+                    <constraint firstItem="lLy-F7-ciQ" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="topMargin" constant="2" id="h5o-Jk-9yI"/>
                     <constraint firstItem="aCl-zV-J5y" firstAttribute="leading" secondItem="uxG-h3-jPt" secondAttribute="trailing" id="iyA-WT-nK3"/>
                     <constraint firstAttribute="trailingMargin" secondItem="aCl-zV-J5y" secondAttribute="trailing" constant="2" id="jg5-Rs-31l"/>
                     <constraint firstItem="Ois-e3-M4I" firstAttribute="trailing" secondItem="uxG-h3-jPt" secondAttribute="trailing" id="rut-pS-0r2"/>
                     <constraint firstAttribute="bottomMargin" secondItem="aCl-zV-J5y" secondAttribute="bottom" constant="27" id="v7T-vd-5dO"/>
+                    <constraint firstItem="lLy-F7-ciQ" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leadingMargin" constant="2" id="zE6-Jt-xIi"/>
                 </constraints>
             </tableViewCellContentView>
             <connections>
@@ -74,6 +86,7 @@
                 <outlet property="labelCounter" destination="1Bu-wA-gQI" id="ywy-0D-Mr2"/>
                 <outlet property="labelDescription" destination="uxG-h3-jPt" id="zZj-wb-Zmk"/>
                 <outlet property="labelElapsed" destination="aCl-zV-J5y" id="ojp-rj-HN6"/>
+                <outlet property="labelInitials" destination="lLy-F7-ciQ" id="lVk-xI-ci7"/>
                 <outlet property="labelLastMessage" destination="Ois-e3-M4I" id="vrK-9B-5rf"/>
             </connections>
             <point key="canvasLocation" x="423" y="544"/>

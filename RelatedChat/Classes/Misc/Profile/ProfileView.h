@@ -15,6 +15,7 @@
 @interface ProfileView : UITableViewController
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-- (id)initWith:(NSString *)userId_ User:(FUser *)user_;
+- (id)initWithUser:(FUser *)user_ Chat:(BOOL)chat_;
+- (id)initWithUserId:(NSString *)userId_ Chat:(BOOL)chat_;
 
 @end

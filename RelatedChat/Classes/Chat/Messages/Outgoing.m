@@ -40,8 +40,8 @@
 	FObject *message = [FObject objectWithPath:FMESSAGE_PATH Subpath:groupId];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	message[FMESSAGE_GROUPID] = groupId;
-	message[FMESSAGE_USERID] = [FUser currentId];
-	message[FMESSAGE_USER_NAME] = [FUser name];
+	message[FMESSAGE_SENDERID] = [FUser currentId];
+	message[FMESSAGE_SENDERNAME] = [FUser fullname];
 	message[FMESSAGE_STATUS] = TEXT_DELIVERED;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if (text != nil) [self sendTextMessage:message Text:text];
@@ -75,7 +75,7 @@
 	FIRStorageReference *reference = [[storage referenceForURL:FIREBASE_STORAGE] child:Filename(@"message_image", @"jpg")];
 	FIRStorageUploadTask *task = [reference putData:cryptedPicture metadata:nil completion:^(FIRStorageMetadata *metadata, NSError *error)
 	{
-		[hud hide:YES];
+		[hud hideAnimated:YES];
 		[task removeAllObservers];
 		if (error == nil)
 		{
@@ -117,7 +117,7 @@
 	FIRStorageReference *reference = [[storage referenceForURL:FIREBASE_STORAGE] child:Filename(@"message_video", @"mp4")];
 	FIRStorageUploadTask *task = [reference putData:cryptedVideo metadata:nil completion:^(FIRStorageMetadata *metadata, NSError *error)
 	{
-		[hud hide:YES];
+		[hud hideAnimated:YES];
 		[task removeAllObservers];
 		if (error == nil)
 		{
@@ -158,7 +158,7 @@
 	FIRStorageReference *reference = [[storage referenceForURL:FIREBASE_STORAGE] child:Filename(@"message_audio", @"m4a")];
 	FIRStorageUploadTask *task = [reference putData:cryptedAudio metadata:nil completion:^(FIRStorageMetadata *metadata, NSError *error)
 	{
-		[hud hide:YES];
+		[hud hideAnimated:YES];
 		[task removeAllObservers];
 		if (error == nil)
 		{
@@ -204,7 +204,7 @@
 	{
 		if (error == nil)
 		{
-			UpdateRecents(groupId, message[FMESSAGE_TEXT]);
+			[Recent updateLastMessage:message];
 			SendPushNotification1(message);
 		}
 		else [ProgressHUD showError:@"Message sending failed."];

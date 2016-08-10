@@ -10,8 +10,10 @@
 // THE SOFTWARE.
 
 #import "SettingsView.h"
+#import "EditProfileView.h"
 #import "PasswordView.h"
 #import "StatusView.h"
+#import "ArchiveView.h"
 #import "CacheView.h"
 #import "MediaView.h"
 #import "PrivacyView.h"
@@ -26,12 +28,15 @@
 
 @property (strong, nonatomic) IBOutlet UIView *viewHeader;
 @property (strong, nonatomic) IBOutlet UIImageView *imageUser;
+@property (strong, nonatomic) IBOutlet UILabel *labelInitials;
 @property (strong, nonatomic) IBOutlet UILabel *labelName;
 
+@property (strong, nonatomic) IBOutlet UITableViewCell *cellProfile;
 @property (strong, nonatomic) IBOutlet UITableViewCell *cellPassword;
 
 @property (strong, nonatomic) IBOutlet UITableViewCell *cellStatus;
 
+@property (strong, nonatomic) IBOutlet UITableViewCell *cellArchive;
 @property (strong, nonatomic) IBOutlet UITableViewCell *cellCache;
 @property (strong, nonatomic) IBOutlet UITableViewCell *cellMedia;
 @property (strong, nonatomic) IBOutlet UITableViewCell *cellAutoSave;
@@ -48,10 +53,10 @@
 
 @implementation SettingsView
 
-@synthesize viewHeader, imageUser, labelName;
-@synthesize cellPassword;
+@synthesize viewHeader, imageUser, labelInitials, labelName;
+@synthesize cellProfile, cellPassword;
 @synthesize cellStatus;
-@synthesize cellCache, cellMedia, cellAutoSave;
+@synthesize cellArchive, cellCache, cellMedia, cellAutoSave;
 @synthesize cellPrivacy, cellTerms;
 @synthesize cellLogout;
 @synthesize switchAutoSave;
@@ -97,9 +102,13 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if ([FUser currentId] != nil)
 	{
-		if (skipLoading)
-			skipLoading = NO;
-		else [self loadUser];
+		if ([FUser isOnboardOk])
+		{
+			if (skipLoading)
+				skipLoading = NO;
+			else [self loadUser];
+		}
+		else OnboardUser(self);
 	}
 	else LoginUser(self);
 }
@@ -112,16 +121,22 @@
 {
 	FUser *user = [FUser currentUser];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[DownloadManager image:[FUser picture] completion:^(NSString *path, NSError *error, BOOL network)
+	labelInitials.text = [user initials];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[DownloadManager image:user[FUSER_PICTURE] completion:^(NSString *path, NSError *error, BOOL network)
 	{
-		if (error == nil) imageUser.image = [[UIImage alloc] initWithContentsOfFile:path];
+		if (error == nil)
+		{
+			imageUser.image = [[UIImage alloc] initWithContentsOfFile:path];
+			labelInitials.text = nil;
+		}
 	}];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	labelName.text = [FUser name];
+	labelName.text = user[FUSER_FULLNAME];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	cellStatus.textLabel.text = user[FUSER_STATUS];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[switchAutoSave setOn:[FUser autoSaveMedia]];
+	[switchAutoSave setOn:[user[FUSER_AUTOSAVEMEDIA] boolValue]];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[self.tableView reloadData];
 }
@@ -141,6 +156,18 @@
 	}];
 }
 
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)saveUserAutoSaveMedia:(BOOL)autoSaveMedia
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	FUser *user = [FUser currentUser];
+	user[FUSER_AUTOSAVEMEDIA] = @(autoSaveMedia);
+	[user saveInBackground:^(NSError *error)
+	{
+		if (error != nil) [ProgressHUD showError:@"Network error."];
+	}];
+}
+
 #pragma mark - User actions
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -148,7 +175,26 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	skipLoading = YES;
-	PresentPhotoLibrary(self, YES);
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+
+	UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"Open camera" style:UIAlertActionStyleDefault
+													handler:^(UIAlertAction *action) { PresentPhotoCamera(self, YES); }];
+	UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"Photo library" style:UIAlertActionStyleDefault
+													handler:^(UIAlertAction *action) { PresentPhotoLibrary(self, YES); }];
+	UIAlertAction *action3 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
+
+	[alert addAction:action1]; [alert addAction:action2]; [alert addAction:action3];
+	[self presentViewController:alert animated:YES completion:nil];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)actionProfile
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	EditProfileView *editProfileView = [[EditProfileView alloc] initWith:NO];
+	NavigationController *navController = [[NavigationController alloc] initWithRootViewController:editProfileView];
+	[self presentViewController:navController animated:YES completion:nil];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -167,6 +213,15 @@
 	StatusView *statusView = [[StatusView alloc] init];
 	statusView.hidesBottomBarWhenPushed = YES;
 	[self.navigationController pushViewController:statusView animated:YES];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)actionArchive
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	ArchiveView *archiveView = [[ArchiveView alloc] init];
+	archiveView.hidesBottomBarWhenPushed = YES;
+	[self.navigationController pushViewController:archiveView animated:YES];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -193,19 +248,14 @@
 {
 	BOOL isOn = [switchAutoSave isOn];
 	[switchAutoSave setOn:!isOn animated:YES];
-	[self actionAutoSaveSwitch];
+	[self saveUserAutoSaveMedia:[switchAutoSave isOn]];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)actionAutoSaveSwitch
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	FUser *user = [FUser currentUser];
-	user[FUSER_AUTOSAVEMEDIA] = @([switchAutoSave isOn]);
-	[user saveInBackground:^(NSError *error)
-	{
-		if (error != nil) [ProgressHUD showError:@"Network error."];
-	}];
+	[self saveUserAutoSaveMedia:[switchAutoSave isOn]];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -233,32 +283,21 @@
 	UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
 
 	UIAlertAction *action1 = [UIAlertAction actionWithTitle:@"Log out" style:UIAlertActionStyleDestructive
-													handler:^(UIAlertAction *action) { [self actionLogoutUser]; }];
+													handler:^(UIAlertAction *action) { LogoutUser(); }];
 	UIAlertAction *action2 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil];
 
 	[alert addAction:action1]; [alert addAction:action2];
 	[self presentViewController:alert animated:YES completion:nil];
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)actionLogoutUser
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	if ([FUser logOut])
-	{
-		[CacheManager cleanupManual];
-		//-----------------------------------------------------------------------------------------------------------------------------------------
-		[NotificationCenter post:NOTIFICATION_USER_LOGGED_OUT];
-		//-----------------------------------------------------------------------------------------------------------------------------------------
-		LoginUser(self);
-	}
-	else [ProgressHUD showError:@"Network error."];
-}
+#pragma mark - Cleanup methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)actionCleanup
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
+	[self.tabBarController setSelectedIndex:DEFAULT_TAB];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
 	imageUser.image = [UIImage imageNamed:@"settings_blank"];
 	labelName.text = nil;
 }
@@ -289,6 +328,8 @@
 			{
 				if (error == nil)
 				{
+					labelInitials.text = nil;
+					imageUser.image = imagePicture;
 					NSString *linkPicture = metadata1.downloadURL.absoluteString;
 					NSString *linkThumbnail = metadata2.downloadURL.absoluteString;
 					[self saveUserPictures:@{@"linkPicture":linkPicture, @"linkThumbnail":linkThumbnail}];
@@ -299,7 +340,6 @@
 		else [ProgressHUD showError:@"Network error."];
 	}];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	imageUser.image = imagePicture;
 	[picker dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -318,9 +358,9 @@
 {
 	BOOL emailLogin = [[FUser loginMethod] isEqualToString:LOGIN_EMAIL];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if (section == 0) return emailLogin ? 1 : 0;
+	if (section == 0) return emailLogin ? 2 : 1;
 	if (section == 1) return 1;
-	if (section == 2) return 3;
+	if (section == 2) return 4;
 	if (section == 3) return 2;
 	if (section == 4) return 1;
 	return 0;
@@ -338,11 +378,13 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	if ((indexPath.section == 0) && (indexPath.row == 0)) return cellPassword;
+	if ((indexPath.section == 0) && (indexPath.row == 0)) return cellProfile;
+	if ((indexPath.section == 0) && (indexPath.row == 1)) return cellPassword;
 	if ((indexPath.section == 1) && (indexPath.row == 0)) return cellStatus;
-	if ((indexPath.section == 2) && (indexPath.row == 0)) return cellCache;
-	if ((indexPath.section == 2) && (indexPath.row == 1)) return cellMedia;
-	if ((indexPath.section == 2) && (indexPath.row == 2)) return cellAutoSave;
+	if ((indexPath.section == 2) && (indexPath.row == 0)) return cellArchive;
+	if ((indexPath.section == 2) && (indexPath.row == 1)) return cellCache;
+	if ((indexPath.section == 2) && (indexPath.row == 2)) return cellMedia;
+	if ((indexPath.section == 2) && (indexPath.row == 3)) return cellAutoSave;
 	if ((indexPath.section == 3) && (indexPath.row == 0)) return cellPrivacy;
 	if ((indexPath.section == 3) && (indexPath.row == 1)) return cellTerms;
 	if ((indexPath.section == 4) && (indexPath.row == 0)) return cellLogout;
@@ -357,11 +399,13 @@
 {
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if ((indexPath.section == 0) && (indexPath.row == 0)) [self actionPassword];
+	if ((indexPath.section == 0) && (indexPath.row == 0)) [self actionProfile];
+	if ((indexPath.section == 0) && (indexPath.row == 1)) [self actionPassword];
 	if ((indexPath.section == 1) && (indexPath.row == 0)) [self actionStatus];
-	if ((indexPath.section == 2) && (indexPath.row == 0)) [self actionCache];
-	if ((indexPath.section == 2) && (indexPath.row == 1)) [self actionMedia];
-	if ((indexPath.section == 2) && (indexPath.row == 2)) [self actionAutoSave];
+	if ((indexPath.section == 2) && (indexPath.row == 0)) [self actionArchive];
+	if ((indexPath.section == 2) && (indexPath.row == 1)) [self actionCache];
+	if ((indexPath.section == 2) && (indexPath.row == 2)) [self actionMedia];
+	if ((indexPath.section == 2) && (indexPath.row == 3)) [self actionAutoSave];
 	if ((indexPath.section == 3) && (indexPath.row == 0)) [self actionPrivacy];
 	if ((indexPath.section == 3) && (indexPath.row == 1)) [self actionTerms];
 	if ((indexPath.section == 4) && (indexPath.row == 0)) [self actionLogout];

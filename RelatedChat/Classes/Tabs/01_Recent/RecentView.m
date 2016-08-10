@@ -20,15 +20,25 @@
 @interface RecentView()
 {
 	BOOL initialized;
-	FIRDatabaseReference *firebase;
+	BOOL refreshTableView;
+	BOOL refreshTabCounter;
 
-	NSMutableArray *recents;
-	NSMutableArray *recentIds;
+	SWTableViewCell *lastCell;
+
+	NSTimer *timer;
+	RLMResults *dbrecents;
+	FIRDatabaseReference *firebase;
 }
+
+@property (strong, nonatomic) IBOutlet UISearchBar *searchBar;
+@property (strong, nonatomic) IBOutlet UITableView *tableView;
+
 @end
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 @implementation RecentView
+
+@synthesize searchBar;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
@@ -60,8 +70,8 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	self.tableView.tableHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, CGFLOAT_MIN)];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	recents = [[NSMutableArray alloc] init];
-	recentIds = [[NSMutableArray alloc] init];
+	timer = [NSTimer scheduledTimerWithTimeInterval:0.5 target:self selector:@selector(refreshViewDetails) userInfo:nil repeats:YES];
+	[[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -72,7 +82,11 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if ([FUser currentId] != nil)
 	{
-
+		if ([FUser isOnboardOk])
+		{
+			
+		}
+		else OnboardUser(self);
 	}
 	else LoginUser(self);
 }
@@ -89,8 +103,9 @@
 		{
 			initialized = YES;
 			[self loadRecents];
+			[self createRecentObservers];
 		}
-		else [self.tableView reloadData];
+		else [self refreshTableView];
 	}
 }
 
@@ -98,16 +113,14 @@
 - (void)loadRecents
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	[Recents load:^(NSMutableArray *objects)
-	{
-		for (FObject *recent in objects)
-			[self insertRecent:recent];
-		//-----------------------------------------------------------------------------------------------------------------------------------------
-		[self.tableView reloadData];
-		[self updateTabCounter];
-		//-----------------------------------------------------------------------------------------------------------------------------------------
-		[self createRecentObservers];
-	}];
+	NSString *text = searchBar.text;
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"isArchived == NO AND isDeleted == NO AND description CONTAINS[c] %@", text];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	dbrecents = [[DBRecent objectsWithPredicate:predicate] sortedResultsUsingProperty:FRECENT_LASTMESSAGEDATE ascending:NO];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[self refreshTabCounter];
+	[self refreshTableView];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -119,87 +132,105 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[query observeEventType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot *snapshot)
 	{
-		FObject *recent = [FObject objectWithPath:FRECENT_PATH dictionary:snapshot.value];
-		if ([recentIds containsObject:recent[FRECENT_GROUPID]] == NO)
-		{
-			[self insertRecent:recent];
-			[self.tableView reloadData];
-			[self updateTabCounter];
-		}
+		NSDictionary *recent = snapshot.value;
+		[RELPassword set:recent[FRECENT_PASSWORD] groupId:recent[FRECENT_GROUPID]];
+		//-----------------------------------------------------------------------------------------------------------------------------------------
+		dispatch_async(dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL), ^{
+			[self updateRealm:recent];
+			refreshTabCounter = YES;
+			refreshTableView = YES;
+		});
 	}];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[query observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot *snapshot)
 	{
-		FObject *recent = [FObject objectWithPath:FRECENT_PATH dictionary:snapshot.value];
-		[self removeRecent:recent];
-		[self insertRecent:recent];
-		[self.tableView reloadData];
-		[self updateTabCounter];
+		NSDictionary *recent = snapshot.value;
+		dispatch_async(dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL), ^{
+			[self updateRealm:recent];
+			refreshTabCounter = YES;
+			refreshTableView = YES;
+		});
 	}];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)updateRealm:(NSDictionary *)recent
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	NSMutableDictionary *temp = [NSMutableDictionary dictionaryWithDictionary:recent];
+	temp[FRECENT_MEMBERS] = [recent[FRECENT_MEMBERS] componentsJoinedByString:@","];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[query observeEventType:FIRDataEventTypeChildRemoved withBlock:^(FIRDataSnapshot *snapshot)
-	{
-		FObject *recent = [FObject objectWithPath:FRECENT_PATH dictionary:snapshot.value];
-		[self removeRecent:recent];
-		[self.tableView reloadData];
-		[self updateTabCounter];
-	}];
+	RLMRealm *realm = [RLMRealm defaultRealm];
+	[realm beginWriteTransaction];
+	[DBRecent createOrUpdateInRealm:realm withValue:temp];
+	[realm commitWriteTransaction];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)insertRecent:(FObject *)recent
+- (void)archiveRealm:(DBRecent *)dbrecent
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	[recents insertObject:recent atIndex:0];
-	[recentIds insertObject:recent[FRECENT_GROUPID] atIndex:0];
-	[RELPassword set:recent[FRECENT_PASSWORD] groupId:recent[FRECENT_GROUPID]];
+	RLMRealm *realm = [RLMRealm defaultRealm];
+	[realm beginWriteTransaction];
+	dbrecent.isArchived = YES;
+	[realm commitWriteTransaction];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)removeRecent:(FObject *)recent
+- (void)deleteRealm:(DBRecent *)dbrecent
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	for (FObject *temp in recents)
-	{
-		if ([[recent objectId] isEqualToString:[temp objectId]])
-		{
-			[recents removeObject:temp];
-			[recentIds removeObject:recent[FRECENT_GROUPID]];
-			break;
-		}
-	}
+	RLMRealm *realm = [RLMRealm defaultRealm];
+	[realm beginWriteTransaction];
+	dbrecent.isDeleted = YES;
+	[realm commitWriteTransaction];
 }
 
-#pragma mark - Helper methods
+#pragma mark - Refresh methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)updateTabCounter
+- (void)refreshViewDetails
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	if (refreshTableView)	[self refreshTableView];
+	if (refreshTabCounter)	[self refreshTabCounter];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)refreshTableView
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[self.tableView reloadData];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	refreshTableView = NO;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)refreshTabCounter
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	NSInteger total = 0;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	for (FObject *recent in recents)
-	{
-		total += [recent[FRECENT_COUNTER] integerValue];
-	}
+	for (DBRecent *dbrecent in dbrecents)
+		total += dbrecent.counter;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	UITabBarItem *item = self.tabBarController.tabBar.items[0];
 	item.badgeValue = (total != 0) ? [NSString stringWithFormat:@"%ld", total] : nil;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	UIUserNotificationSettings *currentUserNotificationSettings = [[UIApplication sharedApplication] currentUserNotificationSettings];
 	if (currentUserNotificationSettings.types & UIUserNotificationTypeBadge)
-	{
 		[UIApplication sharedApplication].applicationIconBadgeNumber = total;
-	}
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	refreshTabCounter = NO;
 }
 
 #pragma mark - User actions
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)actionChat:(NSString *)groupId
+- (void)actionChat:(NSDictionary *)dictionary
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	ChatView *chatView = [[ChatView alloc] initWith:groupId];
+	ChatView *chatView = [[ChatView alloc] initWith:dictionary];
 	chatView.hidesBottomBarWhenPushed = YES;
 	[self.navigationController pushViewController:chatView animated:YES];
 }
@@ -230,16 +261,6 @@
 	[self presentViewController:navController animated:YES completion:nil];
 }
 
-#pragma mark - SelectSingleDelegate
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)didSelectSingleUser:(FUser *)user2
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	NSString *groupId = StartPrivateChat(user2);
-	[self actionChat:groupId];
-}
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)actionSelectMultiple
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -250,15 +271,73 @@
 	[self presentViewController:navController animated:YES completion:nil];
 }
 
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)actionArchive:(NSInteger)index
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	DBRecent *dbrecent = dbrecents[index];
+	NSString *recentId = dbrecent.objectId;
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[self archiveRealm:dbrecent];
+	[self refreshTabCounter];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[self.tableView deleteRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:index inSection:0]] withRowAnimation:UITableViewRowAnimationFade];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[self performSelector:@selector(delayedArchive:) withObject:recentId afterDelay:0.25];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)delayedArchive:(NSString *)recentId
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[self.tableView reloadData];
+	[Recent archiveItem:recentId];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)actionDelete:(NSInteger)index
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	DBRecent *dbrecent = dbrecents[index];
+	NSString *recentId = dbrecent.objectId;
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[self deleteRealm:dbrecent];
+	[self refreshTabCounter];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[self.tableView deleteRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:index inSection:0]] withRowAnimation:UITableViewRowAnimationFade];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[self performSelector:@selector(delayedDelete:) withObject:recentId afterDelay:0.25];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)delayedDelete:(NSString *)recentId
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[self.tableView reloadData];
+	[Recent deleteItem:recentId];
+}
+
+#pragma mark - SelectSingleDelegate
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)didSelectSingleUser:(FUser *)user2
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	NSDictionary *dictionary = StartPrivateChat(user2);
+	[self actionChat:dictionary];
+}
+
 #pragma mark - SelectMultipleDelegate
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)didSelectMultipleUsers:(NSMutableArray *)users
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	NSString *groupId = StartMultipleChat(users);
-	[self actionChat:groupId];
+	NSDictionary *dictionary = StartMultipleChat(users);
+	[self actionChat:dictionary];
 }
+
+#pragma mark - Cleanup methods
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)actionCleanup
@@ -266,13 +345,19 @@
 {
 	[firebase removeAllObservers]; firebase = nil;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[recents removeAllObjects];
-	[recentIds removeAllObjects];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[self.tableView reloadData];
-	[self updateTabCounter];
+	[self refreshTabCounter];
+	[self refreshTableView];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	initialized = NO;
+}
+
+#pragma mark - UIScrollViewDelegate
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[self.view endEditing:YES];
 }
 
 #pragma mark - Table view data source
@@ -288,7 +373,7 @@
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	return [recents count];
+	return [dbrecents count];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -297,42 +382,59 @@
 {
 	RecentCell *cell = [tableView dequeueReusableCellWithIdentifier:@"RecentCell" forIndexPath:indexPath];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[cell bindData:recents[indexPath.row]];
-	[cell loadImage:recents[indexPath.row] TableView:tableView IndexPath:indexPath];
+	cell.leftUtilityButtons = nil;
+	cell.rightUtilityButtons = [self rightButtons];
+	cell.delegate = self;
+	cell.tag = indexPath.row;
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	DBRecent *dbrecent = dbrecents[indexPath.row];
+	[cell bindData:dbrecent];
+	[cell loadImage:dbrecent TableView:tableView IndexPath:indexPath];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	return cell;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
+- (NSArray *)rightButtons
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	NSMutableArray *rightUtilityButtons = [NSMutableArray new];
+	[rightUtilityButtons sw_addUtilityButtonWithColor:HEXCOLOR(0x3E70A7FF) title:@"Archive"];
+	[rightUtilityButtons sw_addUtilityButtonWithColor:[UIColor redColor] title:@"Delete"];
+	return rightUtilityButtons;
+}
+
+#pragma mark - SWTableViewCellDelegate
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)swipeableTableViewCell:(SWTableViewCell *)cell didTriggerRightUtilityButtonWithIndex:(NSInteger)index
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[cell hideUtilityButtonsAnimated:YES];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	if (index == 0) [self actionArchive:cell.tag];
+	if (index == 1) [self actionDelete:cell.tag];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)swipeableTableViewCell:(SWTableViewCell *)cell scrollingToState:(SWCellState)state
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	if (state == kCellStateRight) lastCell = cell;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (BOOL)swipeableTableViewCellShouldHideUtilityButtonsOnSwipe:(SWTableViewCell *)cell
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	return YES;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
+- (BOOL)swipeableTableViewCell:(SWTableViewCell *)cell canSwipeToState:(SWCellState)state
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	FObject *recent = recents[indexPath.row];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[self removeRecent:recent];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[self updateTabCounter];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[self.tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[self performSelector:@selector(delayedDeleteRecentItem:) withObject:recent afterDelay:0.5];
-}
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)delayedDeleteRecentItem:(FObject *)recent
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	[recent deleteInBackground:^(NSError *error)
-	{
-		if (error != nil) [ProgressHUD showError:@"Network error."];
-	}];
+	return YES;
 }
 
 #pragma mark - Table view delegate
@@ -343,11 +445,52 @@
 {
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	FObject *recent = recents[indexPath.row];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	RestartRecentChat(recent);
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[self actionChat:recent[FRECENT_GROUPID]];
+	if ((lastCell == nil) || [lastCell isUtilityButtonsHidden])
+	{
+		DBRecent *dbrecent = dbrecents[indexPath.row];
+		NSDictionary *dictionary = RestartRecentChat(dbrecent);
+		[self actionChat:dictionary];
+	}
+	else [lastCell hideUtilityButtonsAnimated:YES];
+}
+
+#pragma mark - UISearchBarDelegate
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[self loadRecents];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar_
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[searchBar setShowsCancelButton:YES animated:YES];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)searchBarTextDidEndEditing:(UISearchBar *)searchBar_
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[searchBar setShowsCancelButton:NO animated:YES];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)searchBarCancelButtonClicked:(UISearchBar *)searchBar_
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	searchBar.text = @"";
+	[searchBar resignFirstResponder];
+	[self loadRecents];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar_
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[searchBar resignFirstResponder];
 }
 
 @end

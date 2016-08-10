@@ -11,14 +11,16 @@
 
 #import <Foundation/Foundation.h>
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-NSString*		StartPrivateChat		(FUser *user2);
+#import "DBRecent.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-NSString*		StartMultipleChat		(NSMutableArray *users);
+NSDictionary*	StartPrivateChat		(FUser *user2);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-void			StartGroupChat			(FObject *group);
+NSDictionary*	StartMultipleChat		(NSMutableArray *users);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-void			RestartRecentChat		(FObject *recent);
+NSDictionary*	StartGroupChat			(FObject *group);
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+NSDictionary*	RestartRecentChat		(DBRecent *dbrecent);

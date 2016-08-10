@@ -7,6 +7,7 @@ target 'app' do
 	pod 'Firebase/Auth'
 	pod 'Firebase/Database'
 	pod 'Firebase/Storage'
+	pod 'Realm'
 
 	pod 'IQAudioRecorderController'
 	pod 'JSQMessagesViewController'
@@ -14,4 +15,5 @@ target 'app' do
 	pod 'ProgressHUD'
 	pod 'Reachability'
 	pod 'RNGridMenu'
+	pod 'SWTableViewCell'
 end

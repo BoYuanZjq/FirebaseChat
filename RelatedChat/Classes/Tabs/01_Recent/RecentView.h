@@ -15,7 +15,7 @@
 #import "SelectMultipleView.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-@interface RecentView : UITableViewController <SelectSingleDelegate, SelectMultipleDelegate>
+@interface RecentView : UIViewController <UISearchBarDelegate, UITableViewDataSource, UITableViewDelegate, SWTableViewCellDelegate, SelectSingleDelegate, SelectMultipleDelegate>
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 @end

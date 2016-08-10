@@ -12,11 +12,11 @@
 #import "utilities.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-@interface RecentCell : UITableViewCell
+@interface RecentCell : SWTableViewCell
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
-- (void)bindData:(FObject *)recent;
+- (void)bindData:(DBRecent *)dbrecent;
 
-- (void)loadImage:(FObject *)recent TableView:(UITableView *)tableView IndexPath:(NSIndexPath *)indexPath;
+- (void)loadImage:(DBRecent *)dbrecent TableView:(UITableView *)tableView IndexPath:(NSIndexPath *)indexPath;
 
 @end
