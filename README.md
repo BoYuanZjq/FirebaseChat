@@ -51,14 +51,16 @@ This is a full native iPhone app to create realtime, text based group or private
 - Save audio messages to device
 - Delete read and unread messages
 - Realtime recent view for ongoing chats
+- Archived conversation view for archived chats
 - Map view for shared locations
 - Picture view for pictures
 - Basic Settings view included
 - Basic Profile view for users
-- Group settings view for groups
+- Edit Profile view for changing user details
+- Group details view for groups
+- Chat details view
 - Privacy Policy view
 - Terms of Service view
-- Facebook profile picture grabbed automatically
 - Picture, video and audio upload progress indicator
 - Video length limit possibility
 - Copy and paste text messages
@@ -69,7 +71,7 @@ This is a full native iPhone app to create realtime, text based group or private
 - Hide keyboard with swipe down
 - Smooth animations
 - Send/Receive sound effects
-- Deployment target: iOS 8+
+- Deployment target: iOS 8.4+
 - Supported devices: iPhone 4S/5/5C/5S/6/6 Plus/6S/6S Plus
 
 ---
