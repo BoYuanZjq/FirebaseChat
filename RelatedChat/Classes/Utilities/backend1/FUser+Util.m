@@ -55,7 +55,9 @@
 - (NSString *)initials
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	return [NSString stringWithFormat:@"%@%@", [self[FUSER_FIRSTNAME] substringToIndex:1], [self[FUSER_LASTNAME] substringToIndex:1]];
+	if ((self[FUSER_FIRSTNAME] != nil) && (self[FUSER_LASTNAME] != nil))
+		return [NSString stringWithFormat:@"%@%@", [self[FUSER_FIRSTNAME] substringToIndex:1], [self[FUSER_LASTNAME] substringToIndex:1]];
+	return nil;
 }
 
 @end

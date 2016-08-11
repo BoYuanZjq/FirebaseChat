@@ -42,7 +42,7 @@
 	message[FMESSAGE_GROUPID] = groupId;
 	message[FMESSAGE_SENDERID] = [FUser currentId];
 	message[FMESSAGE_SENDERNAME] = [FUser fullname];
-	message[FMESSAGE_STATUS] = TEXT_DELIVERED;
+	message[FMESSAGE_SENDERINITIALS] = [FUser initials];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if (text != nil) [self sendTextMessage:message Text:text];
 	else if (picture != nil) [self sendPictureMessage:message Picture:picture];
@@ -198,6 +198,8 @@
 - (void)sendMessage:(FObject *)message
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
+	message[FMESSAGE_STATUS] = TEXT_DELIVERED;
+	//---------------------------------------------------------------------------------------------------------------------------------------------
 	message[FMESSAGE_TEXT] = [RELCryptor encryptText:message[FMESSAGE_TEXT] groupId:groupId];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[message saveInBackground:^(NSError *error)

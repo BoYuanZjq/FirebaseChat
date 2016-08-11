@@ -79,7 +79,7 @@
 	{
 		FUser *user = [[FUser alloc] initWithPath:FUSER_PATH dictionary:snapshot.value];
 		//-----------------------------------------------------------------------------------------------------------------------------------------
-		[[self objects] addObject:user];
+		if (user[FUSER_FULLNAME] != nil) [[self objects] addObject:user];
 		//-----------------------------------------------------------------------------------------------------------------------------------------
 		if ([[user objectId] isEqualToString:lastId])
 		{

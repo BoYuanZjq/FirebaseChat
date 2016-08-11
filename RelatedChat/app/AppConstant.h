@@ -99,7 +99,7 @@
 #define		FMESSAGE_GROUPID					@"groupId"				//	String
 #define		FMESSAGE_SENDERID					@"senderId"				//	String
 #define		FMESSAGE_SENDERNAME					@"senderName"			//	String
-#define		FMESSAGE_STATUS						@"status"				//	String
+#define		FMESSAGE_SENDERINITIALS				@"senderInitials"		//	String
 
 #define		FMESSAGE_TYPE						@"type"					//	String
 #define		FMESSAGE_TEXT						@"text"					//	String
@@ -119,6 +119,8 @@
 
 #define		FMESSAGE_LATITUDE					@"latitude"				//	Number
 #define		FMESSAGE_LONGITUDE					@"longitude"			//	Number
+
+#define		FMESSAGE_STATUS						@"status"				//	String
 #define		FMESSAGE_CREATEDAT					@"createdAt"			//	Interval
 //-----------------------------------------------------------------------
 #define		FRECENT_PATH						@"Recent"				//	Path name

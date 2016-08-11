@@ -48,12 +48,12 @@
 	NSMutableArray *messages;
 	NSMutableArray *jsqmessages;
 
-	NSMutableDictionary *avatars;
 	NSMutableArray *avatarIds;
+	NSMutableDictionary *avatars;
+	NSMutableDictionary *initials;
 
 	JSQMessagesBubbleImage *bubbleImageOutgoing;
 	JSQMessagesBubbleImage *bubbleImageIncoming;
-	JSQMessagesAvatarImage *avatarImageBlank;
 }
 
 @property (strong, nonatomic) IBOutlet UIView *viewTitle;
@@ -106,16 +106,15 @@
 	messages = [[NSMutableArray alloc] init];
 	jsqmessages = [[NSMutableArray alloc] init];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	avatars = [[NSMutableDictionary alloc] init];
 	avatarIds = [[NSMutableArray alloc] init];
+	avatars = [[NSMutableDictionary alloc] init];
+	initials = [[NSMutableDictionary alloc] init];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	JSQMessagesBubbleImageFactory *bubbleFactory = [[JSQMessagesBubbleImageFactory alloc] init];
 	bubbleImageOutgoing = [bubbleFactory outgoingMessagesBubbleImageWithColor:COLOR_OUTGOING];
 	bubbleImageIncoming = [bubbleFactory incomingMessagesBubbleImageWithColor:COLOR_INCOMING];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	avatarImageBlank = [JSQMessagesAvatarImageFactory avatarImageWithImage:[UIImage imageNamed:@"chat_blank"] diameter:30];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[JSQMessagesCollectionViewCell registerMenuAction:@selector(actionCopy:)];
 	[JSQMessagesCollectionViewCell registerMenuAction:@selector(actionDelete:)];
@@ -320,9 +319,11 @@
 - (void)downloadThumbnail:(FUser *)user
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	NSString *userId = [user objectId];
+	if (user[FUSER_THUMBNAIL] == nil) return;
+	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[DownloadManager image:user[FUSER_THUMBNAIL] completion:^(NSString *path, NSError *error, BOOL network)
 	{
+		NSString *userId = [user objectId];
 		if (error == nil)
 		{
 			UIImage *image = [[UIImage alloc] initWithContentsOfFile:path];
@@ -500,9 +501,16 @@
 	if (avatars[senderId] == nil)
 	{
 		[self loadAvatar:senderId];
-		return avatarImageBlank;
 	}
-	else return avatars[senderId];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	if (initials[senderId] == nil)
+	{
+		NSString *temp = (message[FMESSAGE_SENDERINITIALS] != nil) ? message[FMESSAGE_SENDERINITIALS] : @"";
+		initials[senderId] = [JSQMessagesAvatarImageFactory avatarImageWithUserInitials:temp backgroundColor:HEXCOLOR(0xE4E4E4FF)
+													textColor:[UIColor whiteColor] font:[UIFont systemFontOfSize:14] diameter:30];
+	}
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	return (avatars[senderId] != nil) ? avatars[senderId] : initials[senderId];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
