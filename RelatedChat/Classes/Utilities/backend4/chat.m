@@ -46,25 +46,17 @@ NSDictionary* StartMultipleChat(NSMutableArray *users)
 {
 	[users addObject:[FUser currentUser]];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	NSMutableArray *names = [[NSMutableArray alloc] init];
 	NSMutableArray *members = [[NSMutableArray alloc] init];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	for (FUser *user in users)
-	{
-		[names addObject:user[FUSER_FULLNAME]];
-		[members addObject:[user objectId]];
-	}
+	for (FUser *user in users) [members addObject:[user objectId]];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	NSArray *sorted = [members sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
 	NSString *groupId = [RELChecksum md5HashOfString:[sorted componentsJoinedByString:@""]];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	NSString *description = [names componentsJoinedByString:@", "];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[RELPassword init:groupId];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[Recent createMultiple:groupId Description:description Members:members];
+	[Recent createMultiple:groupId Members:members];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	return @{@"groupId":groupId, @"members":members, @"description":description, @"type":CHAT_MULTIPLE};
+	return @{@"groupId":groupId, @"members":members, @"description":@"", @"type":CHAT_MULTIPLE};
 }
 
 #pragma mark - Group Chat methods

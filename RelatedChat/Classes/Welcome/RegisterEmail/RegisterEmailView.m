@@ -14,10 +14,6 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 @interface RegisterEmailView()
 
-@property (strong, nonatomic) IBOutlet UITableViewCell *cellEmail;
-@property (strong, nonatomic) IBOutlet UITableViewCell *cellPassword;
-@property (strong, nonatomic) IBOutlet UITableViewCell *cellButton;
-
 @property (strong, nonatomic) IBOutlet UITextField *fieldEmail;
 @property (strong, nonatomic) IBOutlet UITextField *fieldPassword;
 
@@ -26,7 +22,7 @@
 
 @implementation RegisterEmailView
 
-@synthesize cellEmail, cellPassword, cellButton;
+@synthesize delegate;
 @synthesize fieldEmail, fieldPassword;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,19 +30,18 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[super viewDidLoad];
-	self.title = @"Email Register";
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	UITapGestureRecognizer *gestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissKeyboard)];
-	[self.tableView addGestureRecognizer:gestureRecognizer];
+	[self.view addGestureRecognizer:gestureRecognizer];
 	gestureRecognizer.cancelsTouchesInView = NO;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)viewDidAppear:(BOOL)animated
+- (void)viewWillDisappear:(BOOL)animated
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	[super viewDidAppear:animated];
-	[fieldEmail becomeFirstResponder];
+	[super viewWillDisappear:animated];
+	[self dismissKeyboard];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,7 +54,7 @@
 #pragma mark - User actions
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)actionRegister
+- (IBAction)actionRegister:(id)sender
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	NSString *email = [fieldEmail.text lowercaseString];
@@ -74,47 +69,19 @@
 	{
 		if (error == nil)
 		{
-			UserLoggedIn(LOGIN_EMAIL);
+			[self dismissViewControllerAnimated:YES completion:^{
+				if (delegate != nil) [delegate didRegisterUser];
+			}];
 		}
 		else [ProgressHUD showError:[error description]];
 	}];
 }
 
-#pragma mark - Table view data source
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+- (IBAction)actionDismiss:(id)sender
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	return 1;
-}
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	return 3;
-}
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	if ((indexPath.section == 0) && (indexPath.row == 0)) return cellEmail;
-	if ((indexPath.section == 0) && (indexPath.row == 1)) return cellPassword;
-	if ((indexPath.section == 0) && (indexPath.row == 2)) return cellButton;
-	return nil;
-}
-
-#pragma mark - Table view delegate
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	[tableView deselectRowAtIndexPath:indexPath animated:YES];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if (indexPath.row == 2) [self actionRegister];
+	[self dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - UITextField delegate
@@ -123,14 +90,8 @@
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	if (textField == fieldEmail)
-	{
-		[fieldPassword becomeFirstResponder];
-	}
-	if (textField == fieldPassword)
-	{
-		[self actionRegister];
-	}
+	if (textField == fieldEmail) [fieldPassword becomeFirstResponder];
+	if (textField == fieldPassword) [self actionRegister:nil];
 	return YES;
 }
 

@@ -19,6 +19,8 @@
 void LogoutUser(void)
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
+	ResignOneSignalId();
+	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if ([FUser logOut])
 	{
 		[CacheManager cleanupManual];
@@ -37,8 +39,8 @@ void LogoutUser(void)
 void LoginUser(id target)
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	NavigationController *navigationController = [[NavigationController alloc] initWithRootViewController:[[WelcomeView alloc] init]];
-	[target presentViewController:navigationController animated:YES completion:^{
+	WelcomeView *welcomeView = [[WelcomeView alloc] init];
+	[target presentViewController:welcomeView animated:YES completion:^{
 		UIViewController *view = (UIViewController *)target;
 		[view.tabBarController setSelectedIndex:DEFAULT_TAB];
 	}];
@@ -60,6 +62,8 @@ void OnboardUser(id target)
 void UserLoggedIn(NSString *loginMethod)
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
+	UpdateOneSignalId();
+	//---------------------------------------------------------------------------------------------------------------------------------------------
 	UpdateUserSettings(loginMethod);
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[NotificationCenter post:NOTIFICATION_USER_LOGGED_IN];
@@ -86,4 +90,36 @@ void UpdateUserSettings(NSString *loginMethod)
 	if (user[FUSER_AUTOSAVEMEDIA] == nil)	{	update = YES;	user[FUSER_AUTOSAVEMEDIA] = @NO;				}
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if (update) [user saveInBackground];
+}
+
+#pragma mark -
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+void UpdateOneSignalId(void)
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	if ([FUser currentId] != nil)
+	{
+		if ([UserDefaults stringForKey:@"OneSignalId"] != nil)
+			AssignOneSignalId();
+		else ResignOneSignalId();
+	}
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+void AssignOneSignalId(void)
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	FUser *user = [FUser currentUser];
+	user[FUSER_ONESIGNALID] = [UserDefaults stringForKey:@"OneSignalId"];
+	[user saveInBackground];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+void ResignOneSignalId(void)
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	FUser *user = [FUser currentUser];
+	user[FUSER_ONESIGNALID] = @"";
+	[user saveInBackground];
 }

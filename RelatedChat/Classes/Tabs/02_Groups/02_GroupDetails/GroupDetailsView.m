@@ -53,7 +53,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[super viewDidLoad];
-	self.title = @"Group Settings";
+	self.title = @"Group Details";
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	UIBarButtonItem *backButton = [[UIBarButtonItem alloc] initWithTitle:@"Back" style:UIBarButtonItemStylePlain target:nil action:nil];
 	[self.navigationItem setBackBarButtonItem:backButton];
@@ -466,7 +466,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	NSString *text = ([users count] > 1) ? @"MEMBERS" : @"MEMBER";
-	return [NSString stringWithFormat:@"%ld %@", [users count], text];
+	return [NSString stringWithFormat:@"%ld %@", (long) [users count], text];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------

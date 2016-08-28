@@ -20,10 +20,7 @@
 @property NSString *userId;
 @property NSString *groupId;
 
-@property NSString *senderId;
-@property NSString *senderName;
-@property NSString *senderInitials;
-
+@property NSString *initials;
 @property NSString *picture;
 @property NSString *description;
 @property NSString *members;

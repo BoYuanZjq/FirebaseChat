@@ -10,52 +10,38 @@
 // THE SOFTWARE.
 
 #import "LoginEmailView.h"
-#import "ForgotView.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 @interface LoginEmailView()
 
-@property (strong, nonatomic) IBOutlet UITableViewCell *cellEmail;
-@property (strong, nonatomic) IBOutlet UITableViewCell *cellPassword;
-@property (strong, nonatomic) IBOutlet UITableViewCell *cellButton;
-
 @property (strong, nonatomic) IBOutlet UITextField *fieldEmail;
 @property (strong, nonatomic) IBOutlet UITextField *fieldPassword;
-
-@property (strong, nonatomic) IBOutlet UIView *viewFooter;
 
 @end
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 @implementation LoginEmailView
 
-@synthesize cellEmail, cellPassword, cellButton;
+@synthesize delegate;
 @synthesize fieldEmail, fieldPassword;
-@synthesize viewFooter;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)viewDidLoad
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[super viewDidLoad];
-	self.title = @"Email Login";
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	UIBarButtonItem *backButton = [[UIBarButtonItem alloc] initWithTitle:@"Back" style:UIBarButtonItemStylePlain target:nil action:nil];
-	[self.navigationItem setBackBarButtonItem:backButton];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	UITapGestureRecognizer *gestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissKeyboard)];
-	[self.tableView addGestureRecognizer:gestureRecognizer];
+	[self.view addGestureRecognizer:gestureRecognizer];
 	gestureRecognizer.cancelsTouchesInView = NO;
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	self.tableView.tableFooterView = viewFooter;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)viewDidAppear:(BOOL)animated
+- (void)viewWillDisappear:(BOOL)animated
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	[super viewDidAppear:animated];
-	[fieldEmail becomeFirstResponder];
+	[super viewWillDisappear:animated];
+	[self dismissKeyboard];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -68,7 +54,7 @@
 #pragma mark - User actions
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)actionLogin
+- (IBAction)actionLogin:(id)sender
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	NSString *email = [fieldEmail.text lowercaseString];
@@ -83,55 +69,19 @@
 	{
 		if (error == nil)
 		{
-			UserLoggedIn(LOGIN_EMAIL);
+			[self dismissViewControllerAnimated:YES completion:^{
+				if (delegate != nil) [delegate didLoginUser];
+			}];
 		}
 		else [ProgressHUD showError:[error description]];
 	}];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (IBAction)actionForgot:(id)sender
+- (IBAction)actionDismiss:(id)sender
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	ForgotView *forgotView = [[ForgotView alloc] init];
-	[self.navigationController pushViewController:forgotView animated:YES];
-}
-
-#pragma mark - Table view data source
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	return 1;
-}
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	return 3;
-}
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	if ((indexPath.section == 0) && (indexPath.row == 0)) return cellEmail;
-	if ((indexPath.section == 0) && (indexPath.row == 1)) return cellPassword;
-	if ((indexPath.section == 0) && (indexPath.row == 2)) return cellButton;
-	return nil;
-}
-
-#pragma mark - Table view delegate
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	[tableView deselectRowAtIndexPath:indexPath animated:YES];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	if (indexPath.row == 2) [self actionLogin];
+	[self dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - UITextField delegate
@@ -140,14 +90,8 @@
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	if (textField == fieldEmail)
-	{
-		[fieldPassword becomeFirstResponder];
-	}
-	if (textField == fieldPassword)
-	{
-		[self actionLogin];
-	}
+	if (textField == fieldEmail) [fieldPassword becomeFirstResponder];
+	if (textField == fieldPassword) [self actionLogin:nil];
 	return YES;
 }
 

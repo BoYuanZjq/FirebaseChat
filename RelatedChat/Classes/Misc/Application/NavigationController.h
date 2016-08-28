@@ -9,16 +9,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import "NavigationController.h"
-
-@implementation NavigationController
+#import "utilities.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)viewDidLoad
+@interface NavigationController : UINavigationController
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-{
-	[super viewDidLoad];
-	self.navigationBar.translucent = NO;
-}
 
 @end

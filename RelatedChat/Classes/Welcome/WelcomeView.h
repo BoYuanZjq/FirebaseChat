@@ -11,8 +11,11 @@
 
 #import "utilities.h"
 
+#import "LoginEmailView.h"
+#import "RegisterEmailView.h"
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-@interface WelcomeView : UIViewController
+@interface WelcomeView : UIViewController <LoginEmailDelegate, RegisterEmailDelegate>
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 @end

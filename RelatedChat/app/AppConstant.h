@@ -14,12 +14,15 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-#define		FIREBASE_STORAGE					@"gs://fir-11-7fa8b.appspot.com"
+#define		FIREBASE_STORAGE					@"gs://fir-16.appspot.com"
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+#define		ONESIGNAL_APPID						@"15cad58e-b84c-47e1-a29b-932e88457132"
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 #define		DEFAULT_TAB							0
 #define		VIDEO_LENGTH						5
+#define		AUDIO_LENGTH						5
 #define		INSERT_MESSAGES						10
 //-----------------------------------------------------------------------
 #define		STATUS_LOADING						1
@@ -75,6 +78,7 @@
 #define		FUSER_LOCATION						@"location"				//	String
 #define		FUSER_STATUS						@"status"				//	String
 #define		FUSER_LOGINMETHOD					@"loginMethod"			//	String
+#define		FUSER_ONESIGNALID					@"oneSignalId"			//	String
 
 #define		FUSER_PICTURE						@"picture"				//	String
 #define		FUSER_THUMBNAIL						@"thumbnail"			//	String
@@ -129,10 +133,7 @@
 #define		FRECENT_USERID						@"userId"				//	String
 #define		FRECENT_GROUPID						@"groupId"				//	String
 
-#define		FRECENT_SENDERID					@"senderId"				//	String
-#define		FRECENT_SENDERNAME					@"senderName"			//	String
-#define		FRECENT_SENDERINITIALS				@"senderInitials"		//	String
-
+#define		FRECENT_INITIALS					@"initials"				//	String
 #define		FRECENT_PICTURE						@"picture"				//	String
 #define		FRECENT_DESCRIPTION					@"description"			//	String
 #define		FRECENT_MEMBERS						@"members"				//	Array

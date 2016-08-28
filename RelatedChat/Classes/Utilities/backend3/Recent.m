@@ -71,7 +71,7 @@
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-+ (void)createMultiple:(NSString *)groupId Description:(NSString *)description Members:(NSArray *)members
++ (void)createMultiple:(NSString *)groupId Members:(NSArray *)members
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[self fetchMembers:groupId completion:^(NSMutableArray *userIds)
@@ -83,6 +83,7 @@
 		//-----------------------------------------------------------------------------------------------------------------------------------------
 		for (NSString *userId in createIds)
 		{
+			NSString *description = [Users namesFor:members Except:userId];
 			[self createItem:userId GroupId:groupId Sender:[FUser currentUser] Picture:[FUser picture] Description:description
 					 Members:members Type:CHAT_MULTIPLE];
 		}
@@ -118,10 +119,7 @@
 	recent[FRECENT_USERID] = userId;
 	recent[FRECENT_GROUPID] = groupId;
 	
-	recent[FRECENT_SENDERID] = [sender objectId];
-	recent[FRECENT_SENDERNAME] = sender[FUSER_FULLNAME];
-	recent[FRECENT_SENDERINITIALS] = [sender initials];
-	
+	recent[FRECENT_INITIALS] = [sender initials];
 	recent[FRECENT_PICTURE] = (picture != nil) ? picture : @"";
 	recent[FRECENT_DESCRIPTION] = description;
 	recent[FRECENT_MEMBERS] = members;

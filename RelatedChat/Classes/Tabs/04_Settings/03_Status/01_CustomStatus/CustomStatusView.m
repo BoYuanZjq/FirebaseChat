@@ -28,7 +28,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[super viewDidLoad];
-	self.title = @"Your status";
+	self.title = @"Custom status";
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self
 																						  action:@selector(actionCancel)];

@@ -14,7 +14,7 @@
 #import "SelectMultipleView.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-@interface GroupDetailsView : UITableViewController <UIAlertViewDelegate, SelectMultipleDelegate>
+@interface GroupDetailsView : UITableViewController <UIImagePickerControllerDelegate, UIAlertViewDelegate, SelectMultipleDelegate>
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 - (id)initWithGroup:(FObject *)group_ Chat:(BOOL)chat_;

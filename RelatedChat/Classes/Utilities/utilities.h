@@ -16,9 +16,10 @@
 #import <MobileCoreServices/MobileCoreServices.h>
 
 #import <Firebase/Firebase.h>
+#import <OneSignal/OneSignal.h>
 #import <RelatedSDK/RelatedSDK.h>
 
-#import "IQAudioRecorderController.h"
+#import "IQAudioRecorderViewController.h"
 #import "JSQMessages.h"
 #import "MBProgressHUD.h"
 #import "ProgressHUD.h"

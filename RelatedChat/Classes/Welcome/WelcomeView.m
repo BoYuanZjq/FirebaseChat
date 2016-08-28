@@ -20,12 +20,6 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[super viewDidLoad];
-	self.title = @"Welcome";
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	UIBarButtonItem *backButton = [[UIBarButtonItem alloc] initWithTitle:@"Back" style:UIBarButtonItemStylePlain target:nil action:nil];
-	[self.navigationItem setBackBarButtonItem:backButton];
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	[NotificationCenter addObserver:self selector:@selector(actionDismiss) name:NOTIFICATION_USER_LOGGED_IN];
 }
 
 #pragma mark - User actions
@@ -42,7 +36,9 @@
 		{
 			if (user != nil)
 			{
-				UserLoggedIn(LOGIN_FACEBOOK);
+				[self dismissViewControllerAnimated:YES completion:^{
+					UserLoggedIn(LOGIN_FACEBOOK);
+				}];
 			}
 			else [ProgressHUD dismiss];
 		}
@@ -55,7 +51,8 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	LoginEmailView *loginEmailView = [[LoginEmailView alloc] init];
-	[self.navigationController pushViewController:loginEmailView animated:YES];
+	loginEmailView.delegate = self;
+	[self presentViewController:loginEmailView animated:YES completion:nil];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -63,15 +60,30 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	RegisterEmailView *registerEmailView = [[RegisterEmailView alloc] init];
-	[self.navigationController pushViewController:registerEmailView animated:YES];
+	registerEmailView.delegate = self;
+	[self presentViewController:registerEmailView animated:YES completion:nil];
 }
 
+#pragma mark - LoginEmailDelegate
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)actionDismiss
+- (void)didLoginUser
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	[NotificationCenter removeObserver:self];
-	[self dismissViewControllerAnimated:YES completion:nil];
+	[self dismissViewControllerAnimated:YES completion:^{
+		UserLoggedIn(LOGIN_EMAIL);
+	}];
+}
+
+#pragma mark - RegisterEmailDelegate
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)didRegisterUser
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[self dismissViewControllerAnimated:YES completion:^{
+		UserLoggedIn(LOGIN_EMAIL);
+	}];
 }
 
 @end

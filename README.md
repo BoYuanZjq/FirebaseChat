@@ -23,6 +23,7 @@ This is a full native iPhone app to create realtime, text based group or private
 - Private chat functionality
 - Single or Multiple recipients
 - Full realtime actions - latency less than 100 ms
+- Push notification support
 - No backend programming needed
 - Native and easy to customize user interface
 - Login with Email
@@ -57,6 +58,7 @@ This is a full native iPhone app to create realtime, text based group or private
 - Basic Settings view included
 - Basic Profile view for users
 - Edit Profile view for changing user details
+- Onboarding view on signup
 - Group details view for groups
 - Chat details view
 - Privacy Policy view
@@ -85,12 +87,12 @@ This is a full native iPhone app to create realtime, text based group or private
 ## REQUIREMENTS
 
 - Xcode 7+
-- iOS 8+
+- iOS 8.4+
 - ARC
 
 ## INSTALLATION
 
-**1.,** Please run ```pod install``` first (the CocoaPods Frameworks and Libraries are not included in the repo). If you haven't used CocoaPods before, you can get started [here](https://guides.cocoapods.org/using/getting-started.html).
+**1.,** Please run ```pod install``` first (the CocoaPods Frameworks and Libraries are not included in the repo). If you haven't used CocoaPods before, you can get started [here](https://guides.cocoapods.org/using/getting-started.html). Or you might prefer to use the [CocoaPods app](https://cocoapods.org/app) instead.
 
 **2.,** Please make an account at [Firebase](https://firebase.google.com) and perform some very basic [setup](https://firebase.google.com/docs/ios/setup).
 
@@ -98,9 +100,13 @@ This is a full native iPhone app to create realtime, text based group or private
 
 **4.,** Please replace the FIREBASE_STORAGE define value in *AppConstant.h*.
 
-**5.,** In case of using Facebook login, please register your app at [Facebook](https://developers.facebook.com/apps).
+**5.,** For using push notification, please create an account at [OneSignal](https://onesignal.com). You will need to [configure](https://documentation.onesignal.com/docs/generating-an-ios-push-certificate) your certificate details.
 
-**6.,** Then please replace the existing Facebook account details in *Info.plist*.
+**6.,** Please replace the ONESIGNAL_APPID define value in *AppConstant.h*.
+
+**7.,** In case of using Facebook login, please register your app at [Facebook](https://developers.facebook.com/apps).
+
+**8.,** Then please replace the existing Facebook account details in *Info.plist*.
 
 ## CONTACT
 

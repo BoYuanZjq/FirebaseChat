@@ -215,7 +215,7 @@
 		total += dbrecent.counter;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	UITabBarItem *item = self.tabBarController.tabBar.items[0];
-	item.badgeValue = (total != 0) ? [NSString stringWithFormat:@"%ld", total] : nil;
+	item.badgeValue = (total != 0) ? [NSString stringWithFormat:@"%ld", (long) total] : nil;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	UIUserNotificationSettings *currentUserNotificationSettings = [[UIApplication sharedApplication] currentUserNotificationSettings];
 	if (currentUserNotificationSettings.types & UIUserNotificationTypeBadge)

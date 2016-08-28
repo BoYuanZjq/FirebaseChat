@@ -31,7 +31,7 @@
 {
 	labelName.text = group[FGROUP_NAME];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	labelMembers.text = [NSString stringWithFormat:@"%ld members", [group[FGROUP_MEMBERS] count]];
+	labelMembers.text = [NSString stringWithFormat:@"%ld members", (long) [group[FGROUP_MEMBERS] count]];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------

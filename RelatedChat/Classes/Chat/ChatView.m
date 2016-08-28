@@ -133,6 +133,13 @@
 	firebase2 = [[[FIRDatabase database] referenceWithPath:FTYPING_PATH] child:groupId];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[self loadMessages];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)viewWillAppear:(BOOL)animated
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[super viewWillAppear:animated];
 	[self fetchGroup];
 }
 
@@ -351,7 +358,13 @@
 	object[FGROUP_OBJECTID] = groupId;
 	[object fetchInBackground:^(NSError *error)
 	{
-		if (error == nil) group = object;
+		if (error == nil)
+		{
+			group = object;
+			members = group[FGROUP_MEMBERS];
+			description = group[FGROUP_NAME];
+			[self updateTitleDetails];
+		}
 	}];
 }
 
@@ -505,9 +518,8 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if (initials[senderId] == nil)
 	{
-		NSString *temp = (message[FMESSAGE_SENDERINITIALS] != nil) ? message[FMESSAGE_SENDERINITIALS] : @"";
-		initials[senderId] = [JSQMessagesAvatarImageFactory avatarImageWithUserInitials:temp backgroundColor:HEXCOLOR(0xE4E4E4FF)
-													textColor:[UIColor whiteColor] font:[UIFont systemFontOfSize:14] diameter:30];
+		initials[senderId] = [JSQMessagesAvatarImageFactory avatarImageWithUserInitials:message[FMESSAGE_SENDERINITIALS]
+								backgroundColor:HEXCOLOR(0xE4E4E4FF) textColor:[UIColor whiteColor] font:[UIFont systemFontOfSize:14] diameter:30];
 	}
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	return (avatars[senderId] != nil) ? avatars[senderId] : initials[senderId];
@@ -928,20 +940,21 @@
 	[picker dismissViewControllerAnimated:YES completion:nil];
 }
 
-#pragma mark - IQAudioRecorderControllerDelegate
+#pragma mark - IQAudioRecorderViewControllerDelegate
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)audioRecorderController:(IQAudioRecorderController *)controller didFinishWithAudioAtPath:(NSString *)path
+- (void)audioRecorderController:(IQAudioRecorderViewController *)controller didFinishWithAudioAtPath:(NSString *)path
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	[self messageSend:nil Video:nil Picture:nil Audio:path];
+	[controller dismissViewControllerAnimated:YES completion:nil];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-- (void)audioRecorderControllerDidCancel:(IQAudioRecorderController *)controller
+- (void)audioRecorderControllerDidCancel:(IQAudioRecorderViewController *)controller
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-
+	[controller dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - StickersDelegate
@@ -981,13 +994,13 @@
 	if ([type isEqualToString:CHAT_MULTIPLE])
 	{
 		labelTitle.text = @"Multiple";
-		labelDetails.text = [NSString stringWithFormat:@"%ld members", [members count]];
+		labelDetails.text = [NSString stringWithFormat:@"%ld members", (long) [members count]];
 	}
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if ([type isEqualToString:CHAT_GROUP])
 	{
 		labelTitle.text = description;
-		labelDetails.text = [NSString stringWithFormat:@"%ld members", [members count]];
+		labelDetails.text = [NSString stringWithFormat:@"%ld members", (long) [members count]];
 	}
 }
 

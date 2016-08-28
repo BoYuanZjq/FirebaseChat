@@ -52,7 +52,7 @@
 	NSTimeInterval seconds = [[NSDate date] timeIntervalSinceDate:date];
 	labelElapsed.text = TimeElapsed(seconds);
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	labelCounter.text = (dbrecent.counter != 0) ? [NSString stringWithFormat:@"%ld new", dbrecent.counter] : nil;
+	labelCounter.text = (dbrecent.counter != 0) ? [NSString stringWithFormat:@"%ld new", (long) dbrecent.counter] : nil;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -66,7 +66,7 @@
 	if (path == nil)
 	{
 		imageUser.image = [UIImage imageNamed:@"archive_blank"];
-		labelInitials.text = dbrecent.senderInitials;
+		labelInitials.text = dbrecent.initials;
 		[self downloadImage:dbrecent TableView:tableView IndexPath:indexPath];
 	}
 	else

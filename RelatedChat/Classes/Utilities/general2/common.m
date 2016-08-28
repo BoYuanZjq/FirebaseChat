@@ -15,9 +15,12 @@
 void PresentAudioRecorder(id target)
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	IQAudioRecorderController *controller = [[IQAudioRecorderController alloc] init];
+	IQAudioRecorderViewController *controller = [[IQAudioRecorderViewController alloc] init];
 	controller.delegate = target;
-	[target presentViewController:controller animated:YES completion:nil];
+	controller.title = @"Recorder";
+	controller.maximumRecordDuration = AUDIO_LENGTH;
+	controller.allowCropping = NO;
+	[target presentBlurredAudioRecorderViewControllerAnimated:controller];
 }
 
 #pragma mark -

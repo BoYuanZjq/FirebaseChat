@@ -122,7 +122,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
 	NSString *text = ([users count] > 1) ? @"MEMBERS" : @"MEMBER";
-	return [NSString stringWithFormat:@"%ld %@", [users count], text];
+	return [NSString stringWithFormat:@"%ld %@", (long) [users count], text];
 }
 
 @end

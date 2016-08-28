@@ -9,10 +9,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import <UIKit/UIKit.h>
+#import "NavigationController.h"
+
+@implementation NavigationController
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-@interface NavigationController : UINavigationController
+- (void)viewDidLoad
 //-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+	[super viewDidLoad];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	self.navigationBar.translucent = NO;
+	self.navigationBar.barTintColor = HEXCOLOR(0x7FBB00FF);
+	self.navigationBar.tintColor = [UIColor whiteColor];
+	self.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName:[UIColor whiteColor]};
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+}
 
 @end

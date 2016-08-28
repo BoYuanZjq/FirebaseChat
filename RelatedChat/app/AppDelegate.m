@@ -39,6 +39,13 @@
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 
 	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[OneSignal initWithLaunchOptions:launchOptions appId:ONESIGNAL_APPID handleNotificationReceived:nil handleNotificationAction:nil
+							settings:@{kOSSettingsKeyInAppAlerts:@NO}];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[OneSignal setLogLevel:ONE_S_LL_NONE visualLevel:ONE_S_LL_NONE];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+
+	//---------------------------------------------------------------------------------------------------------------------------------------------
 	// This can be removed once Firebase auth issue is resolved
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if ([UserDefaults boolForKey:@"Initialized"] == NO)
@@ -61,12 +68,12 @@
 	self.settingsView = [[SettingsView alloc] initWithNibName:@"SettingsView" bundle:nil];
 
 	NavigationController *navController1 = [[NavigationController alloc] initWithRootViewController:self.recentView];
-	NavigationController *navController3 = [[NavigationController alloc] initWithRootViewController:self.groupsView];
-	NavigationController *navController4 = [[NavigationController alloc] initWithRootViewController:self.peopleView];
-	NavigationController *navController5 = [[NavigationController alloc] initWithRootViewController:self.settingsView];
+	NavigationController *navController2 = [[NavigationController alloc] initWithRootViewController:self.groupsView];
+	NavigationController *navController3 = [[NavigationController alloc] initWithRootViewController:self.peopleView];
+	NavigationController *navController4 = [[NavigationController alloc] initWithRootViewController:self.settingsView];
 
 	self.tabBarController = [[UITabBarController alloc] init];
-	self.tabBarController.viewControllers = @[navController1, navController3, navController4, navController5];
+	self.tabBarController.viewControllers = @[navController1, navController2, navController3, navController4];
 	self.tabBarController.tabBar.translucent = NO;
 	self.tabBarController.selectedIndex = DEFAULT_TAB;
 
@@ -108,6 +115,14 @@
 {
 	[FBSDKAppEvents activateApp];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[OneSignal IdsAvailable:^(NSString *userId, NSString *pushToken)
+	{
+		if (pushToken != nil)
+			[UserDefaults setObject:userId forKey:@"OneSignalId"];
+		else [UserDefaults removeObjectForKey:@"OneSignalId"];
+		UpdateOneSignalId();
+	}];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
 	CleanupExpiredCache();
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[NotificationCenter post:NOTIFICATION_APP_STARTED];
@@ -145,14 +160,14 @@
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	//NSLog(@"didFailToRegisterForRemoteNotificationsWithError %@", error);
+
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-
+	NSLog(@"%@", userInfo);
 }
 
 #pragma mark - Location manager methods

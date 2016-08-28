@@ -21,3 +21,8 @@ void			OnboardUser				(id target);
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 void			UserLoggedIn			(NSString *loginMethod);
 void			UpdateUserSettings		(NSString *loginMethod);
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+void			UpdateOneSignalId		(void);
+void			AssignOneSignalId		(void);
+void			ResignOneSignalId		(void);

@@ -24,7 +24,7 @@
 
 + (void)createPrivate:(NSString *)userId GroupId:(NSString *)groupId Sender:(FUser *)sender Members:(NSArray *)members;
 
-+ (void)createMultiple:(NSString *)groupId Description:(NSString *)description Members:(NSArray *)members;
++ (void)createMultiple:(NSString *)groupId Members:(NSArray *)members;
 
 + (void)createGroup:(NSString *)groupId Picture:(NSString *)picture Description:(NSString *)description Members:(NSArray *)members;
 

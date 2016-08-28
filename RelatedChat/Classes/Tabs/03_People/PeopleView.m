@@ -153,7 +153,7 @@
 		[sections[section] addObject:object];
 	}
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	labelContacts.text = [NSString stringWithFormat:@"(%ld users)", [objects count]];
+	labelContacts.text = [NSString stringWithFormat:@"(%ld users)", (long) [objects count]];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[self.tableView reloadData];
 }

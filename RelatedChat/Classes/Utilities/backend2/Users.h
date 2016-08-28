@@ -21,4 +21,6 @@
 
 + (void)load:(void (^)(NSMutableArray *objects))completion;
 
++ (NSString *)namesFor:(NSArray *)members Except:(NSString *)userId;
+
 @end

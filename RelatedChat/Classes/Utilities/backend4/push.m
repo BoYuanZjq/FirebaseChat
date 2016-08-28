@@ -15,8 +15,16 @@
 void SendPushNotification1(FObject *message)
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
+	NSString *type = message[FMESSAGE_TYPE];
+	NSString *text = message[FMESSAGE_SENDERNAME];
 	NSString *groupId = message[FMESSAGE_GROUPID];
-	NSString *text = [RELCryptor decryptText:message[FMESSAGE_TEXT] groupId:groupId];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	if ([type isEqualToString:MESSAGE_TEXT])		text = [text stringByAppendingString:@" sent you a text message."];
+	if ([type isEqualToString:MESSAGE_EMOJI])		text = [text stringByAppendingString:@" sent you an emoji."];
+	if ([type isEqualToString:MESSAGE_PICTURE])		text = [text stringByAppendingString:@" sent you a picture."];
+	if ([type isEqualToString:MESSAGE_VIDEO])		text = [text stringByAppendingString:@" sent you a video."];
+	if ([type isEqualToString:MESSAGE_AUDIO])		text = [text stringByAppendingString:@" sent you an audio."];
+	if ([type isEqualToString:MESSAGE_LOCATION])	text = [text stringByAppendingString:@" sent you a location."];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[Recent fetchMembers:groupId completion:^(NSMutableArray *userIds)
 	{
@@ -29,8 +37,19 @@ void SendPushNotification1(FObject *message)
 void SendPushNotification2(NSArray *userIds, NSString *text)
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	//for (NSString *userId in userIds)
-	//{
-	//	NSLog(@"SendPushNotification2: %@ - %@", userId, text);
-	//}
+	NSMutableArray *oneSignalIds = [[NSMutableArray alloc] init];
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	for (FUser *user in [Users objects])
+	{
+		if ([userIds containsObject:[user objectId]])
+		{
+			NSString *oneSignalId = user[FUSER_ONESIGNALID];
+			if ([oneSignalId length] != 0)
+				[oneSignalIds addObject:oneSignalId];
+		}
+	}
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	//NSLog(@"%@ - %@", text, oneSignalIds);
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	[OneSignal postNotification:@{@"contents":@{@"en":text}, @"include_player_ids":oneSignalIds}];
 }
